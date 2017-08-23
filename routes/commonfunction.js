@@ -14,6 +14,7 @@ var responses = require("./responses");
  */
 var checkBlank = function(arr, req, res)
 {
+    console.log("amir");
     var arrlength = arr.length;
     for (var i = 0; i < arrlength; i++)
     {
