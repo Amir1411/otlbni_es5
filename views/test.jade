@@ -1,0 +1,506 @@
+doctype html
+
+h3 upload image
+  form(action='/uploadImage', method='POST', enctype='multipart/form-data')
+    | image :
+    input(type='file', name='image')
+    input(type='submit', value='submit')
+
+h3 Admin_login
+  form(action='/admin_login', method='POST')
+    | email :
+    input(type='text', name='email')
+    | password :
+    input(type='text', name='password')
+    input(type='submit', value='submit')
+h3 Unapproved_driver_list
+  form(action='/unapproved_driver_list', method='POST')
+    | access_token :
+    input(type='text', name='access_token')
+    input(type='submit', value='submit')
+h3 Approve_unapproved_driver
+  form(action='/approve_driver', method='POST', enctype='multipart/form-data')
+    | access_token :
+    input(type='text', name='access_token')
+    | driver_id :
+    input(type='text', name='driver_id')
+    | driver_vehicle_number :
+    input(type='text', name='driver_vehicle_number')
+    | driver_license_number :
+    input(type='text', name='driver_license_number')
+    | social_security_number :
+    input(type='text', name='social_security_number')
+    | driver_car_type (0 = Limo/ 1 = Van):
+    input(type='text', name='driver_car_type')
+    | phone_no :
+    input(type='text', name='phone_no')
+    | driver_paypal_id :
+    input(type='text', name='driver_paypal_id')
+    | driver_vehicle_image :
+    input(type='file', name='driver_vehicle_image')
+    input(type='submit', value='submit')
+h3 Decline_request/delete_user
+  form(action='/delete_user', method='POST')
+    | access_token :
+    input(type='text', name='access_token')
+    | user_id :
+    input(type='text', name='user_id')
+    input(type='submit', value='submit')
+h3 Get_all_driver
+  form(action='/get_all_driver', method='POST')
+    | access_token :
+    input(type='text', name='access_token')
+    input(type='submit', value='submit')
+h3 Edit_driver_info
+  form(action='/edit_driver_info', method='POST', enctype='multipart/form-data')
+    | access_token :
+    input(type='text', name='access_token')
+    | driver_id :
+    input(type='text', name='driver_id')
+    | driver_vehicle_number :
+    input(type='text', name='driver_vehicle_number')
+    | driver_license_number :
+    input(type='text', name='driver_license_number')
+    | social_security_number :
+    input(type='text', name='social_security_number')
+    | driver_car_type (0 = Limo/ 1 = Van):
+    input(type='text', name='driver_car_type')
+    | phone_no :
+    input(type='text', name='phone_no')
+    | driver_paypal_id :
+    input(type='text', name='driver_paypal_id')
+    | driver_vehicle_image :
+    input(type='file', name='driver_vehicle_image')
+    input(type='submit', value='submit')
+h3 Block/Unblock_user
+  form(action='/block_unblock_user', method='POST')
+    | access_token :
+    input(type='text', name='access_token')
+    | user_id :
+    input(type='text', name='user_id')
+    | block_status (0=Unblock/1=Block) :
+    input(type='text', name='block_status')
+    input(type='submit', value='submit')
+h3 Get_all_customer
+  form(action='/get_all_customer', method='POST')
+    | access_token :
+    input(type='text', name='access_token')
+    input(type='submit', value='submit')
+h3 Change_password
+  form(action='/change_password', method='POST')
+    | access_token :
+    input(type='text', name='access_token')
+    | old_password :
+    input(type='text', name='old_password')
+    | new_password :
+    input(type='text', name='new_password')
+    input(type='submit', value='submit')
+h3 List_all_cars
+  form(action='/list_all_cars', method='POST')
+    | access_token :
+    input(type='text', name='access_token')
+    input(type='submit', value='submit')
+h3 Update_car_fare
+  form(action='/update_car_fare', method='POST')
+    | access_token :
+    input(type='text', name='access_token')
+    | car_id :
+    input(type='text', name='car_id')
+    | fare_fixed :
+    input(type='text', name='fare_fixed')
+    | fare_per_km :
+    input(type='text', name='fare_per_km')
+    | fare_per_min :
+    input(type='text', name='fare_per_min')
+    input(type='submit', value='submit')
+//NOT IMPLEMENTED YET
+h3 driverData
+  form(action='/driver_details', method='POST')
+    | access_token :
+    input(type='text', name='access_token')
+    input(type='submit', value='submit')
+h3 userData
+  form(action='/user_details', method='POST')
+    | access_token :
+    input(type='text', name='access_token')
+    input(type='submit', value='submit')
+h3 rideData
+  form(action='/ride_details', method='POST')
+    | access_token :
+    input(type='text', name='access_token')
+    input(type='submit', value='submit')
+h3 payment
+  form(action='/money_paid', method='POST')
+    | access_token :
+    input(type='text', name='access_token')
+    | money_paid :
+    input(type='text', name='money_paid')
+    | driver_id :
+    input(type='text', name='driver_id')
+    input(type='submit', value='submit')
+h3 userActivity
+  form(action='/users_activity', method='POST')
+    | access_token :
+    input(type='text', name='access_token')
+    input(type='submit', value='submit')
+h3 get_user_activity
+  form(action='/get_user_activity', method='POST')
+    | access_token :
+    input(type='text', name='access_token')
+    | user_id :
+    input(type='text', name='user_id')
+    input(type='submit', value='submit')
+h3 Register_driver
+  form(action='/register_driver', method='POST')
+    | access_token :
+    input(type='text', name='access_token')
+    | user_id :
+    input(type='text', name='user_id')
+    input(type='submit', value='register')
+h3 Update_driver_info
+  form(action='/update_driver_info', method='POST', enctype='multipart/form-data')
+    | access_token :
+    input(type='text', name='access_token')
+    | driver_car_image :
+    input(type='file', name='driver_car_image')
+    | driver_license_image :
+    input(type='file', name='driver_license_image')
+    | driver_car_no :
+    input(type='text', name='driver_car_no')
+    | user_id :
+    input(type='text', name='user_id')
+    | car_pic :
+    input(type='text', name='car_pic')
+    | license_pic :
+    input(type='text', name='license_pic')
+    | driver_name :
+    input(type='text', name='driver_name')
+    | phone_no :
+    input(type='text', name='phone_no')
+    input(type='submit', value='update')
+h3 Temp
+  form(action='/temp', method='POST')
+    input(type='submit', value='submit')
+h3 Driver Availability
+  form(action='/driver_availability', method='POST')
+    | access_token :
+    input(type='text', name='access_token')
+    input(type='submit', value='submit')
+h3 Get_driver_availability
+  form(action='/get_driver_availability', method='POST')
+    | access_token :
+    input(type='text', name='access_token')
+    | driver_id :
+    input(type='text', name='driver_id')
+    input(type='submit', value='submit')
+h3 User_heat_map_by_location
+  form(action='/user_heat_map_by_location', method='POST')
+    | user_id :
+    input(type='text', name='user_id')
+    | start_date :
+    input(type='text', name='start_date')
+    | end_date :
+    input(type='text', name='end_date')
+    | access_token :
+    input(type='text', name='access_token')
+    input(type='submit', value='submit')
+h3 Driver_heat_map_by_location
+  form(action='/driver_heat_map_by_location', method='POST')
+    | driver_id :
+    input(type='text', name='driver_id')
+    | start_date :
+    input(type='text', name='start_date')
+    | end_date :
+    input(type='text', name='end_date')
+    | access_token :
+    input(type='text', name='access_token')
+    input(type='submit', value='submit')
+h3 user_heat_map_by_time
+  form(action='/user_heat_map_by_time', method='POST')
+    | user_id :
+    input(type='text', name='user_id')
+    | start_date :
+    input(type='text', name='start_date')
+    | end_date :
+    input(type='text', name='end_date')
+    | access_token :
+    input(type='text', name='access_token')
+    input(type='submit', value='submit')
+h3 driver_heat_map_by_time
+  form(action='/driver_heat_map_by_time', method='POST')
+    | driver_id :
+    input(type='text', name='driver_id')
+    | start_date :
+    input(type='text', name='start_date')
+    | end_date :
+    input(type='text', name='end_date')
+    | access_token :
+    input(type='text', name='access_token')
+    input(type='submit', value='submit')
+h3 list_driver_ids
+  form(action='/list_driver_ids', method='POST')
+    | access_token :
+    input(type='text', name='access_token')
+    input(type='submit', value='submit')
+h3 list_user_ids
+  form(action='/list_user_ids', method='POST')
+    | access_token :
+    input(type='text', name='access_token')
+    input(type='submit', value='submit')
+h3 delete_driver
+  form(action='/delete_driver', method='POST')
+    | access_token :
+    input(type='text', name='access_token')
+    | driver_id :
+    input(type='text', name='driver_id')
+    input(type='submit', value='submit')
+h3 forgot_password
+  form(action='/forgot_password', method='POST')
+    | email :
+    input(type='text', name='email')
+    input(type='submit', value='submit')
+h3 reset_password
+  form(action='/reset_password', method='POST')
+    | email :
+    input(type='text', name='email')
+    | current_password :
+    input(type='text', name='current_password')
+    | new_password :
+    input(type='text', name='new_password')
+    input(type='submit', value='submit')
+h3 delete_user
+  form(action='/delete_user', method='POST')
+    | access_token :
+    input(type='text', name='access_token')
+    | user_id :
+    input(type='text', name='user_id')
+    input(type='submit', value='submit')
+h3 driver_heat_map_by_time2
+  form(action='/driver_heat_map_by_time2', method='POST')
+    | driver_id :
+    input(type='text', name='driver_id')
+    | start_date :
+    input(type='text', name='start_date')
+    | end_date :
+    input(type='text', name='end_date')
+    | access_token :
+    input(type='text', name='access_token')
+    input(type='submit', value='submit')
+h3 rides_info_for_particular_dates
+  form(action='/rides_info_for_particular_dates', method='POST')
+    | start_date :
+    input(type='text', name='start_date')
+    | end_date :
+    input(type='text', name='end_date')
+    | access_token :
+    input(type='text', name='access_token')
+    input(type='submit', value='submit')
+h3 rides_info_for_particular_dates
+  form(action='/rides_info_for_particular_dates', method='POST')
+    | start_date :
+    input(type='text', name='start_date')
+    | end_date :
+    input(type='text', name='end_date')
+    | access_token :
+    input(type='text', name='access_token')
+    input(type='submit', value='submit')
+h3 driver_statistics
+  form(action='/driver_statistics', method='POST')
+    | driver_id :
+    input(type='text', name='driver_id')
+    | access_token :
+    input(type='text', name='access_token')
+    input(type='submit', value='submit')
+h3 requested_users
+  form(action='/requested_users', method='POST')
+    | access_token :
+    input(type='text', name='access_token')
+    input(type='submit', value='submit')
+h3 driver_heat_map
+  form(action='/driver_heat_map', method='POST')
+    | access_token :
+    input(type='text', name='access_token')
+    input(type='submit', value='submit')
+h3 dashboard_reports
+  form(action='/dashboard_report', method='POST')
+    | access_token :
+    input(type='text', name='access_token')
+    | start_time :
+    input(type='text', name='start_time')
+    | end_time :
+    input(type='text', name='end_time')
+    input(type='submit', value='submit')
+h3 heat_map_rides_data
+   form(action='/heat_map_rides_data', method='POST')
+     | access_token :
+     input(type='text', name='access_token')
+     | start_time :
+     input(type='text', name='start_time')
+     | end_time :
+     input(type='text', name='end_time')
+     input(type='submit', value='submit')
+h3 heat_map_earnings
+   form(action='/heat_map_earnings', method='POST')
+      | access_token :
+      input(type='text', name='access_token')
+      | start_time :
+      input(type='text', name='start_time')
+      | end_time :
+      input(type='text', name='end_time')
+      input(type='submit', value='submit')
+h3 Read about_us
+   form(action='/read_about_us', method='POST')
+      | access_token :
+      input(type='text', name='access_token')
+      input(type='submit', value='submit')
+h3 Write about_us
+    form(action='/write_about_us', method='POST')
+      | access_token :
+      input(type='text', name='access_token')
+      | data :
+      input(type='text', name='data')
+      input(type='submit', value='submit')
+h3 Read faq
+    form(action='/read_faq', method='POST')
+      | access_token :
+      input(type='text', name='access_token')
+      input(type='submit', value='submit')
+h3 Write faq
+    form(action='/write_faq', method='POST')
+      | access_token :
+      input(type='text', name='access_token')
+      | data :
+      input(type='text', name='data')
+      input(type='submit', value='submit')
+h3
+    | Phone Number Search
+    form(action='/searchcustomer_from_phonenumber', method='POST')
+        | access_token :
+        input(type='text', name='access_token')
+        | phone_no :
+        input(type='text', name='phone_no')
+        input(type='submit', value='submit')
+h3
+    | Register a user from Dispatcher
+    form(action='/register_a_user', method='POST')
+        | user_name :
+        input(type='text', name='user_name')
+        | ph no :
+        input(type='text', name='ph_no')
+        | email :
+        input(type='text', name='email')
+        | latitude :
+        input(type='text', name='latitude')
+        | longitude :
+        input(type='text', name='longitude')
+        | country :
+        input(type='text', name='country')
+        input(type='submit', value='submit')
+h3
+    | Find a driver
+    form(action='/find_driver_in_area', method='post')
+        | access token :
+        input(type='text', name='access_token')
+        | latitude :
+        input(type='text', name='latitude')
+        | longitude :
+        input(type='text', name='longitude')
+        input(type='submit', value='submit')
+h3
+    | create_manual_engagement
+    form(action='/create_manual_engagement', method='post')
+        | access_token :
+        input(type='text', name='access_token')
+        | driver_id :
+        input(type='text', name='driver_id')
+        | customer_id :
+        input(type='text', name='customer_id')
+        | pickup_latitude :
+        input(type='text', name='pickup_latitude')
+        | pickup_longitude :
+        input(type='text', name='pickup_longitude')
+        | manual_destination_latitude :
+        input(type='text', name='manual_destination_latitude')
+        | manual_destination_longitude :
+        input(type='text', name='manual_destination_longitude')
+        | manual_destination_address :
+        input(type='text', name='manual_destination_address')
+        input(type='submit', value='submit')
+h3
+    | driver_response
+    form(action='/driver_response', method='post')
+        | access_token :
+        input(type='text', name='access_token')
+        | engagementid :
+        input(type='text', name='engagement_id')
+        | driver_user_id :
+        input(type='text', name='driver_id')
+        | customer_id :
+        input(type='text', name='customer_id')
+        input(type='submit', value='submit')
+h3
+    | Driver Payment Details
+    form(action='/driver_payment_details', method='post')
+        | access_token :
+        input(type='text', name='access_token')
+        input(type='submit', value='submit')
+h3
+    | Pay Driver
+    form(action='/payDriver', method='post')
+        | access_token :
+        input(type='text', name='access_token')
+        | driver_id :
+        input(type='text', name='driver_id')
+        | amount :
+        input(type='text', name='amount')
+        input(type='submit', value='submit')
+h3
+    | Add Driver
+    form(action='/add_driver', method='post')
+        | access_token :
+        input(type='text', name='access_token')
+        | email :
+        input(type='text', name='email')
+        input(type='submit', value='submit')
+h3
+    | View All Promo Codes
+    form(action='/viewAllPromoCode', method='post')
+        | access_token :
+        input(type='text', name='access_token')
+        input(type='submit', value='submit')
+h3
+    | View Promo Code With ID
+    form(action='/viewPromoCodeById', method='post')
+        | access_token :
+        input(type='text', name='access_token')
+        | promo_id :
+        input(type='text', name='promo_id')
+        input(type='submit', value='submit')
+h3
+    | Add Promo Code
+    form(action='/addPromoCode', method='post')
+        | access_token :
+        input(type='text', name='access_token')
+        | promo_code :
+        input(type='text', name='promo_code')
+        | start_date :
+        input(type='text', name='start_date')
+        | end_date :
+        input(type='text', name='end_date')
+        | num_coupons :
+        input(type='text', name='num_coupons')
+        | validity_window :
+        input(type='text', name='validity_window')
+        | max_number :
+        input(type='text', name='max_number')
+        | type :
+        input(type='text', name='type')
+        | description :
+        input(type='text', name='description')
+        input(type='submit', value='submit')
+h3
+    | Forgot Password
+    form(action='/forgot_password', method='post')
+        | email :
+        input(type='text', name='email')
+        input(type='submit', value='submit')

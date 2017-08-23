@@ -1,0 +1,1 @@
+exports.configuration = 'development';

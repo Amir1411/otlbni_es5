@@ -1,0 +1,421 @@
+<!doctype html>
+<html>
+	<head>
+		<title>Socket.IO chat</title>
+		<link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+		<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+		<link rel="stylesheet" type="text/css" href="css/custom.css">
+		<style type="text/css">
+			/*body {margin-top: 30px;}*/
+			#messageArea {display: none;}
+			.message_section {border: 1px solid #dddddd;}
+			.new_message_head {background: #f5f3f3 none repeat scroll 0 0;float: left;font-size: 13px;font-weight: 600;padding: 18px 10px;width: 100%;}
+			.new_message_head button {background: rgba(0, 0, 0, 0) none repeat scroll 0 0;border: medium none;}
+			.chat_area {float: left;height: 300px;overflow-x: hidden;overflow-y: auto;width: 100%;}
+			.chat_area li {padding: 14px 14px 0;}
+			.chat_area li .chat-img1 img {height: 40px;width: 40px;}
+			.chat_area .chat-body1 {margin-left: 50px;}
+			.chat-body1 p {background: #fbf9fa none repeat scroll 0 0;padding: 10px;}
+			.message_write {background: #f5f3f3 none repeat scroll 0 0;float: left;padding: 15px;width: 100%;}
+			.message_write textarea.form-control {height: 70px;padding: 10px;}
+			.chat_bottom {float: left;margin-top: 13px;width: 100%;}
+			.upload_btn {color: #777777;}
+
+			.loginAreaWrap {display: none;}
+
+		</style>
+	</head>
+	<body>
+		<div class="container">
+			<div class="col-md-6 col-md-offset-3" id="userArea" style="margin-top: 30px;">
+				<div class="jumbotron">
+					<div class="row">
+						<div class="col-md-12">
+							<!-- <div class="loginAreaWrap">
+								<form id="loginUserForm">
+									<div class="form-group">
+										<label>Enter username</label>
+										<input type="email" class="form-control" id="emailField"><br/>
+									</div>
+									<div class="form-group">
+										<label>Enter Password</label>
+										<input type="password" class="form-control" id="passwordField"><br/>
+									</div>
+									<div class="form-group">
+										<input type="submit" value="Login" class="btn btn-primary">
+									</div>
+								</form>
+							</div> -->
+							<div class="signupAreaWrap">
+								<div class="signupnWithFacebookWrap">
+									<button class="btn btn-primary btn-lg btn-block signupWithFacebook" style="margin-bottom: 20px;">Signup With Facebook</button>
+								</div>
+								<!-- <form id="signupUserForm">
+									<div class="form-group">
+										<label>Enter name</label>
+										<input type="text" class="form-control" id="nameField"><br/>
+									</div>
+									<div class="form-group">
+										<label>Enter username</label>
+										<input type="email" class="form-control" id="emailField"><br/>
+									</div>
+									<div class="form-group">
+										<label>Enter Password</label>
+										<input type="password" class="form-control" id="passwordField"><br/>
+									</div>
+									<div class="form-group">
+										<input type="submit" value="Login" class="btn btn-primary btn-lg col-md-6 loginBtn">
+									</div>
+								</form> -->
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div class="container">
+			<div id="messageArea" class="row">
+				<div class="rulerWrap"></div>
+				<div class="col-sm-3">
+					<div class="well">
+						<div class="clearfix">
+							<div class="left">
+								<img src="" class="img-circle profileImage">
+								<span class="profileName"></span>
+							</div>
+							<div class="right">
+								<div class="pane-list-controls">
+									<div class="menu menu-horizontal">
+										<!-- <span> -->
+											<!-- <div class="menu-item">
+												<i class="material-icons">chat</i>
+											</div> -->
+											<div class="menu-item">
+												<i class="material-icons">menu</i>
+											</div>
+										<!-- </span> -->
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+					<div class="profileUserSearchWrap">
+						<div class="clearfix">
+							<div class="span2" style="padding-right: 0px;margin-top: 5px;">
+								<i class="material-icons">search</i>
+							</div>
+							<div class="span10 searchInputWrap">
+								<input type="text" name="searchUser" class="searchInputItem" placeholder="Search or start new message">
+							</div>
+						</div>
+					</div>
+					<ul class="list-group" id="users">
+						<!-- For list of user -->
+					</ul>
+				</div>
+				<div class="col-sm-9 message_section">
+					<div class="row">
+						<div class="msg_container_wrap">
+							<!-- For message container to the selected user -->
+						</div>
+						<div class="msg_container_dummy">
+						</div>
+					</div>
+ 				</div>
+        	</div>
+		</div>
+		
+		<script src="https://code.jquery.com/jquery-1.11.1.js"></script>
+		<script src="/socket.io/socket.io.js"></script>
+		<script>
+			var socket = io();
+			$(function () {
+				var messageForm = $('#messageForm');
+				var message = $('#message');
+				var chat = $('#chat');
+				var messageArea = $('#messageArea');
+				var userForm = $('#userForm');
+				var userArea = $('#userArea');
+				var username = $('#username');
+				var users = $('#users'); // List of user
+
+				socket.on('new message', function(data){
+					console.log(data);
+					$('.msg_container_wrap').find('.msg_container-'+data["sender_id"]+' #chat').append('<div class="msgWrap clearfix">\
+							<div class="direct-chat-msg doted-border">\
+							<div class="direct-chat-info clearfix">\
+								<span class="direct-chat-name pull-left">Osahan</span>\
+							</div>\
+							<img alt="message user image" src="http://bootsnipp.com/img/avatars/bcf1c0d13e5500875fdd5a7e8ad9752ee16e7462.jpg" class="direct-chat-img">\
+							<div class="direct-chat-text">'+data["msg"]+'</div>\
+							<div class="direct-chat-info clearfix">\
+								<span class="direct-chat-timestamp pull-right">3.36 PM</span>\
+							</div>\
+						</div>\
+					</div>');
+				});
+
+				userForm.submit(function(e){
+					e.preventDefault();
+					socket.emit('new user', username.val(), function(data){
+						if(data) {
+							userArea.hide();
+							messageArea.show();
+						}
+					});
+					username.val('');
+				});
+
+				socket.on('updatelist', function(list){
+					var userList = "";
+					var data = list["friends"]["data"];
+					for (var i = 0; i < data.length; i++) {
+						var result =  data[i];
+						userList += '<li class="list-group-item userBtn" data-room='+result["id"]+' data-friendID='+result["id"]+' data-friendName='+result["name"]+' data-userID='+list["id"]+'>\
+										<img src="'+result["picture"]["data"]["url"]+'" class="img-circle"> \
+										<span class="userName">'+result["name"]+'</span>\
+									</li>';
+						$('.profileImage').attr("src", list["picture"]["data"]["url"]);
+						$('.profileName').html(' '+list["first_name"]+' '+list["last_name"]);
+
+						var winW = $(window).width();
+						var winH = $(window).height();
+						var userListHeight = winH - (54+62+35);
+						$('#users').height(userListHeight);
+					};
+					users.html(userList);
+				});
+	
+			});
+
+			$(window).load(function(){
+				var winW = $(window).width();
+				var winH = $(window).height();
+				var messageHeight = winH - (35+56+147);
+				var userListHeight = winH - (54+62+35);
+				$('.chat_area').height(messageHeight);
+				$('#users').height(userListHeight);
+			});
+
+			$(window).resize(function(){
+				var winW = $(window).width();
+				var winH = $(window).height();
+				var messageHeight = winH - (35+56+147);
+				var userListHeight = winH - (54+62+35);
+				$('.chat_area').height(messageHeight);
+				$('#users').height(userListHeight);
+			});
+
+			$(document).ready(function(){
+		
+				var base_url = "http://localhost:3000/"
+				// For facebook login
+				window.fbAsyncInit = function() {
+					FB.init({
+						appId      : '804292469728804',
+						xfbml      : true,
+						version    : 'v2.8'
+					});
+					FB.AppEvents.logPageView();
+				};
+
+				(function(d, s, id){
+					var js, fjs = d.getElementsByTagName(s)[0];
+					if (d.getElementById(id)) {return;}
+					js = d.createElement(s); js.id = id;
+					js.src = "//connect.facebook.net/en_US/sdk.js";
+					fjs.parentNode.insertBefore(js, fjs);
+				}(document, 'script', 'facebook-jssdk'));
+
+				$('.signupWithFacebook').click(function(){
+					FB.login(function(response){
+						console.log(response);
+						if ( response.status === "connected" ) {			
+							FB.api('/me?fields=id, first_name, last_name, email, picture, friends.fields(id,name,picture)', function(response){			
+							// FB.api("/me/friends", 'GET', {fields: 'id, name, picture'}, function (response) {
+								console.log(response);
+								$('#messageArea').show();
+								$('#userArea').hide();
+								var request = $.ajax({
+									url: base_url+"userCreate",
+									type : "POST",
+									data: { 
+										"user_details" : response
+									}
+								});
+								console.log(base_url+"userCreate");
+								request.done(function( message ) {
+									console.log(message);
+									message = $.parseJSON(message);
+									console.log(message);
+
+									// if ( message.success == '1' ) {
+									// 	//console.log(message.response);
+									// 	var userData = message.response;
+									// 	window.location.replace('<?php echo base_url(); ?>pro/'+userData["user_id"]);
+									// } else {
+									// 	// $('.loginForm-Admin .formError').html(message.response);
+									// 	// $('.loginAdminBtn').val('Log In').css({ 'opacity' : 1 }).removeAttr('disabled');
+									// }
+								});
+								request.fail(function() {
+									//console.log( "Request failed" );
+								});
+								socket.emit('userList', response);				
+							});
+						} else if ( response.status === "not_authorised" ) {
+
+						} else {
+
+						}
+					}, { scope: 'email, user_posts, user_friends, user_photos, user_posts'});
+				});
+
+				$(document).on('click', '.userBtn', function(e){
+					e.preventDefault();
+					
+					var friendId = $(this).attr("data-friendId");
+					var friendName = $(this).attr("data-friendName");
+					var userId = $(this).attr("data-userId");
+
+					$('.msg_container_wrap').empty();
+					$('.msg_container_wrap').append('<div class="msg_container msg_container-'+userId+'" data-friendId="'+friendId+'" data-userId="'+userId+'">\
+							<div class="new_message_head">\
+								<div class="pull-left">\
+									<button><i class="fa fa-plus-square-o" aria-hidden="true"></i> '+friendName+'</button>\
+								</div>\
+								<div class="pull-right">\
+									<div class="dropdown">\
+										<button class="dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">\
+											<i class="fa fa-cogs" aria-hidden="true"></i>  Setting\
+											<span class="caret"></span>\
+										</button>\
+										<ul class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdownMenu1">\
+											<li><a href="#">Action</a></li>\
+											<li><a href="#">Profile</a></li>\
+											<li><a href="#">Logout</a></li>\
+										</ul>\
+									</div>\
+								</div>\
+				 			</div>\
+							<div class="chat_area">\
+								<div class="list-unstyled" id="chat">\
+								</div>\
+							</div>\
+							<div class="message_write">\
+								<form id="messageForm" class="form-group">\
+									<textarea class="form-control" placeholder="type a message" id="message"></textarea>\
+									<div class="clearfix"></div>\
+									<div class="chat_bottom">\
+										<a href="#" class="pull-left upload_btn">\
+											<i class="fa fa-cloud-upload" aria-hidden="true"></i>\
+											Add Files\
+										</a>\
+										<input type="submit" class="pull-right btn btn-success sendMessageBtn" value="Send" data-roomId="'+friendId+'" data-friendId="'+friendId+'" data-userId="'+userId+'">\
+									</div>\
+								</form>\
+							</div>\
+						</div>');
+					$('.msg_container_dummy').hide();
+					$('.msg_container_wrap').show();
+					// $('.msg_container').show();
+					// $('.msg_container-'+room).show();
+
+					var winW = $(window).width();
+					var winH = $(window).height();
+					var messageHeight = winH - (35+56+147);
+					$('.msg_container_wrap').find('.chat_area').height(messageHeight);
+				});
+
+				$(document).on('click', '.sendMessageBtn', function(e){
+					e.preventDefault();
+					
+					var roomId = $(this).attr("data-roomId");
+					var friendId = $(this).attr("data-friendId");
+					var userId = $(this).attr("data-userId");
+					var messageVal = $(this).parents('.msg_container_wrap').find('.msg_container-'+userId+' textarea').val();
+					var date = new Date();
+					var day  = date.getDate();
+					var month = date.getMonth() + 1;            
+					var year =  date.getFullYear();
+
+					var dateString = year+"-"+month+"-"+day;
+					var message = {
+						"msg": messageVal, 
+						"receiver_id": friendId, 
+						"sender_id": userId,
+						"roomId": roomId,
+						"time" : dateString
+					}
+					socket.emit('send message', message);
+					$(this).parents('.msg_container_wrap').find('.msg_container-'+roomId+' textarea').val("");
+				});
+			});
+
+			// $(document).ready(function(){
+			// 	var base_url = "http://localhost:3002/";
+			// 	// For facebook login
+			// 	window.fbAsyncInit = function() {
+			// 		FB.init({
+			// 			appId      : '804292469728804',
+			// 			xfbml      : true,
+			// 			version    : 'v2.8'
+			// 		});
+			// 		FB.AppEvents.logPageView();
+			// 	};
+
+			// 	(function(d, s, id){
+			// 		var js, fjs = d.getElementsByTagName(s)[0];
+			// 		if (d.getElementById(id)) {return;}
+			// 		js = d.createElement(s); js.id = id;
+			// 		js.src = "//connect.facebook.net/en_US/sdk.js";
+			// 		fjs.parentNode.insertBefore(js, fjs);
+			// 	}(document, 'script', 'facebook-jssdk'));
+
+			// 	// https://graph.facebook.com/804292469728804/picture?type=large
+			// 	$('.signupWithFacebook').click(function(){
+			// 		FB.login(function(response){
+			// 			if ( response.status === "connected" ) {
+			// 				FB.api('/me', 'GET', {fields: 'first_name, last_name, email, id, picture'}, function(response){
+			// 					console.log(response);
+			// 					// var request = $.ajax({
+			// 					// 	url: base_url+"userCreate",
+			// 					// 	type : "POST",
+			// 					// 	data: { "name" : response.first_name+' '+response.last_name, "f_id": response.id, "email": response.email, "thumbnail": response.picture.data.url }
+			// 					// });
+			// 					// console.log(base_url+"userCreate");
+			// 					// request.done(function( message ) {
+									
+			// 					// 	// message = $.parseJSON(message);
+			// 					// 	console.log(message);
+
+			// 					// 	// if ( message.success == '1' ) {
+			// 					// 	// 	//console.log(message.response);
+			// 					// 	// 	var userData = message.response;
+			// 					// 	// 	window.location.replace('<?php echo base_url(); ?>pro/'+userData["user_id"]);
+			// 					// 	// } else {
+			// 					// 	// 	// $('.loginForm-Admin .formError').html(message.response);
+			// 					// 	// 	// $('.loginAdminBtn').val('Log In').css({ 'opacity' : 1 }).removeAttr('disabled');
+			// 					// 	// }
+			// 					// });
+			// 					// request.fail(function() {
+			// 					// 	//console.log( "Request failed" );
+			// 					// });
+			// 				});
+			// 			} else if ( response.status === "not_authorised" ) {
+
+			// 			} else {
+
+			// 			}
+			// 		}, { scope: 'email' });
+			// 	});
+
+			// 	$('.loginBtn').click(function(e){
+			// 		e.preventDefault();
+			// 		$('#messageArea').show();
+			// 		$('#userArea').hide();
+			// 	});
+			// });
+		</script>
+	</body>
+</html>⁠⁠⁠⁠
