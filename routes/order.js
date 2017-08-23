@@ -33,14 +33,42 @@ exports.pending_order = function(req, res){
                 responses.sendError(res);
                 return;
             } else if ( result.length > 0 ) {
-                var response = {
-                    flag: 1,
-                    response: result,
-                    message: "Pending order list details"
-                };
-                // res.send(JSON.stringify(response));
-                res.status(constants.responseFlags.ACTION_COMPLETE).json(response);
-                return;
+
+                var userByArray = [];
+                for (var i = 0; i < result.length; i++) {
+                    var created_by_id = result[i].created_by_id;
+                    userByArray.push(created_by_id);
+                }
+                console.log(userByArray);
+
+                var my_order_url = "SELECT `user_name`, `profile_url` FROM `user` WHERE `user_id` IN (?)";
+                connection.query(my_order_url, [userByArray], function(err, userResult) {
+                    console.log(userResult);
+                    if (err) {
+                        responses.sendError(res);
+                        return;
+                    } else {
+                        for (var i = 0; i < userResult.length; i++) {
+                           if ( userResult[i].profile_url != "" ) {
+                                userResult[i].profile_url = "/user/"+userResult[i].profile_url;
+                            }
+                        }
+                        
+                        for (var k = 0; k < result.length; k++) {
+                            for (var j = 0; j < userResult.length; j++) {
+                                result[k]["user_details"] = userResult[j];
+                            }
+                        }
+
+                        var response = {
+                            flag: 1,
+                            response: result,
+                            message: "Pending order list details"
+                        };
+                        // res.send(JSON.stringify(response));
+                        res.status(constants.responseFlags.ACTION_COMPLETE).json(response);
+                    }
+                });
             } else {
                 var response = {
                     flag: 1,
@@ -56,6 +84,8 @@ exports.pending_order = function(req, res){
 
 exports.my_order = function(req, res){
     var access_token = req.body.access_token;
+    var https = require('https');
+    var key = config.get("mapKey");
 
     var manvalues = [access_token];
     var checkblank = commonFunc.checkBlank(manvalues);
@@ -95,37 +125,47 @@ exports.my_order = function(req, res){
                                 userByArray.push(order_by_id);
                             }
                         }
-                        console.log(userByArray);
-                        var my_order_url = "SELECT `user_name`, `profile_url` FROM `user` WHERE `user_id`=?";
-                        connection.query(my_order_url, [userByArray], function(err, userResult) {
-                            if (err) {
-                                responses.sendError(res);
-                                return;
-                            } else {
-                                for (var i = 0; i < userResult.length; i++) {
-                                   if ( userResult[i].profile_url != "" ) {
-                                        userResult[i].profile_url = "/user/"+userResult[i].profile_url;
-                                    }
-                                }
 
-                                for (var k = 0; k < result.length; k++) {
-                                    for (var j = 0; j < userResult.length; j++) {
-                                        if ( result[k].order_by_id == "" ) {
-                                            result[k]["order_by_user_details"] = {};
-                                        } else {
-                                            result[k]["order_by_user_details"] = userResult[j];
+                        get_myorder_place(result, function(placeDetails){
+
+                            var my_order_url = "SELECT `user_name`, `profile_url` FROM `user` WHERE `user_id`=?";
+                            connection.query(my_order_url, [userByArray], function(err, userResult) {
+                                if (err) {
+                                    responses.sendError(res);
+                                    return;
+                                } else {
+                                    for (var i = 0; i < userResult.length; i++) {
+                                       if ( userResult[i].profile_url != "" ) {
+                                            userResult[i].profile_url = "/user/"+userResult[i].profile_url;
                                         }
                                     }
-                                }
+                                    
+                                    for (var k = 0; k < result.length; k++) {
+                                        for (var j = 0; j < userResult.length; j++) {
+                                            for (var l = 0; l < placeDetails.length; l++) {
+                                                if ( result[k].order_by_id == "" ) {
+                                                    result[k]["order_by_user_details"] = {};
+                                                } else {
+                                                    result[k]["order_by_user_details"] = userResult[j];
+                                                }
+                                                var placeResponse = {
+                                                    place_name: placeDetails[l].name,
+                                                    photos: placeDetails[l].icon
+                                                }
+                                                result[k]["place_details"] = placeResponse;
+                                            }
+                                        }
+                                    }
 
-                                var response = {
-                                    flag: 1,
-                                    response: result,
-                                    message: "My order list details"
-                                };
-                                // res.send(JSON.stringify(response));
-                                res.status(constants.responseFlags.ACTION_COMPLETE).json(response);
-                            }
+                                    var response = {
+                                        flag: 1,
+                                        response: result,
+                                        message: "My order list details"
+                                    };
+                                    // res.send(JSON.stringify(response));
+                                    res.status(constants.responseFlags.ACTION_COMPLETE).json(response);
+                                }
+                            });
                         });
                     } else {
                         var response = {
@@ -141,6 +181,54 @@ exports.my_order = function(req, res){
         });
     }
 };
+
+function get_myorder_place(resultItem, callback) {
+    var key = config.get("mapKey");
+    // var place_id = resultItem.place_id;
+    // console.log(place_id);
+    var place_details = [];
+    var place_length = resultItem.length;
+    var j = 1;
+    for (var i in resultItem) {
+
+        var https = require('https');
+        var url = "https://maps.googleapis.com/maps/api/place/details/json?placeid="+resultItem[i].place_id+"&key="+key;
+        console.log(url);
+        https.get(url, function(response) {
+            var body ='';
+            response.on('data', function(chunk) {
+            body += chunk;
+        });
+
+        response.on('end', function() {
+
+            var places = JSON.parse(body);
+            var locations = places.result;
+
+            place_details.push(locations);
+            if (j < place_length) {
+                j++;
+            } else {
+                callback(place_details);
+            }
+            // if( 0 === --place_length ) {
+            //     callback(place_details); //callback if all queries are processed
+            // }
+        });
+        }).on('error', function(e) {
+            console.log("Got error: " + e.message);
+            var response = {
+                status: constants.responseFlags.NO_RESULT_FOUND,
+                flag: 1,
+                response: {},
+                message: "No details found"
+            };
+            // callback(0);
+        });
+    }
+    // callback(place_details)
+
+}
 
 exports.create_order = function(req, res) {
 

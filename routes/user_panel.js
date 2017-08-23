@@ -409,15 +409,31 @@ exports.verify_otp = function(req, res) {
 	connection.query(get_otp, [access_token, otp], function(err, user) {
 
 		if (user.length > 0) {
-			if ( user[0]["profile_url"] != "" ) {
-				user[0]["profile_url"] = "user/"+user[0]["profile_url"];
-			}
-			var response = {
-				flag: 1,
-				response: user[0],
-				message: "Successfully verified"
-			};
-			res.status(constants.responseFlags.ACTION_COMPLETE).json(response);
+			// if ( user[0]["profile_url"] != "" ) {
+			// 	user[0]["profile_url"] = "user/"+user[0]["profile_url"];
+			// }
+			// var response = {
+			// 	flag: 1,
+			// 	response: user[0],
+			// 	message: "Successfully verified"
+			// };
+			// res.status(constants.responseFlags.ACTION_COMPLETE).json(response);
+
+			var is_verified = 1;
+			var update_otp = "UPDATE `user` SET `is_verified`=? WHERE `access_token`=?";
+			connection.query(update_otp, [is_verified, access_token], function(err, result){
+				if ( user[0]["profile_url"] != "" ) {
+					user[0]["profile_url"] = "user/"+user[0]["profile_url"];
+				}
+				user[0]["password"] = "";
+				user[0]["is_verified"] = is_verified;
+				var response = {
+					flag: 1,
+					response: user[0],
+					message: "Successfully verified"
+				};
+				res.status(constants.responseFlags.ACTION_COMPLETE).json(response);
+			});
 
 		} else {
 			var response = {
