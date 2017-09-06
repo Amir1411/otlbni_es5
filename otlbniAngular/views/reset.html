@@ -1,0 +1,43 @@
+	<div class="login">
+		<div id="panelDemo12" class="panel panel-danger" ng-show="show_err" style="margin-top: -300px;">
+			<div class="panel-heading text-center" style="opacity: 0.6;">This token has already <b>Expired</b><br> or is <b>Invalid.</b></div>
+			<div class="panel-footer" style="padding: 10px 0px;">
+				<span class="label label-account" style="color:black;display:block;padding: 0px;">
+					<a class="btn btn-block btn-default" href="/">Back to Login</a>
+				</span>
+			</div>
+		</div>
+		<div class="login-body" ng-show="show_reset" ng-hide="show_err">
+			<a class="login-brand" href="/">
+				<img class="img-responsive" src="assets/img/logo.png" alt="Otlbni">
+			</a>
+			<div class="login-form">
+				<form data-toggle="validator" ng-submit="reset()">
+					<div class="form-group success-container" ng-show="error_msg">
+						<div class="alert alert-danger alert-dismissable fade in">							
+							<a href="#" class="close" data-dismiss="alert" aria-label="close">×</a>							
+							<strong>Error! </strong><span class="errorContainer">{{error_msg_text}}</span>						
+						</div>
+					</div>
+					<div class="form-group success-container" ng-show="success_msg">
+						<div class="alert alert-success alert-dismissable fade in">							
+							<a href="#" class="close" data-dismiss="alert" aria-label="close">×</a>							
+							<strong>Success! </strong><span class="errorContainer">{{success_msg_text}}</span>						
+						</div>
+					</div>
+					<div class="form-group">
+						<label>Set Password</label>
+						<input class="form-control" type="password" name="password" spellcheck="false" autocomplete="off" ng-model="reset_password">
+						<span class="error" ng-show="reset_password_error">*{{reset_password_msg}}</span>
+					</div>
+					<div class="form-group">
+						<label>Confirm Password</label>
+						<input class="form-control" type="password" name="confirm_password" ng-model="reset_confirm_password">
+						<span class="error" ng-show="reset_confirm_password_error">*{{reset_confirm_password_msg}}</span>
+					</div>
+					<button class="btn btn-primary btn-block" type="submit">Reset</button>
+				</form>
+			</div>
+		</div>
+	</div>
+</div>

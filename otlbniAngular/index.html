@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<title>Otlbni</title>
+	<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+	<link rel="manifest" href="manifest.json">
+	<link rel="mask-icon" href="safari-pinned-tab.svg" color="#2c3e50">
+	<meta name="theme-color" content="#ffffff">
+	<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,400italic,500,700">
+	<link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN" crossorigin="anonymous">
+    <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/material-design-lite/1.1.0/material.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.10.15/css/dataTables.material.min.css">
+
+	<link rel="stylesheet" href="assets/css/elephant.min.css">
+	<link rel="stylesheet" href="assets/css/application.min.css">
+	<link rel="stylesheet" href="assets/css/profile.min.css">
+	<link rel="stylesheet" href="assets/css/demo.min.css">
+	<link rel="stylesheet" href="assets/css/style.css">
+	<link rel="stylesheet" href="assets/css/login-2.min.css">
+    <link rel="stylesheet" href="assets/css/vendor.min.css">
+    <style type="text/css">
+        .block {display: block;}
+        .accountManageTab.active:before {transform: rotate(90deg) !important;}
+    </style>
+
+    <!-- <script src="http://ajax.googleapis.com/ajax/libs/jquery/1/jquery.min.js"></script> -->
+	<script src="assets/js/angular.min.js"></script>
+    <script src="assets/js/angular-route.js"></script>
+
+    <script src="app.js"></script>
+    <script src="services/httpService.js"></script>
+    <script src="controllers/dashboard.js"></script>
+    <script src="controllers/login.js"></script>
+    <script src="controllers/forgot.js"></script>
+    <script src="controllers/reset.js"></script>
+    <script src="controllers/profile.js"></script>
+    <script src="controllers/header.js"></script>
+    <script src="controllers/userlist.js"></script>
+    <script src="controllers/courierlist.js"></script>
+    <!-- For ecommerce -->
+    <script src="controllers/ecommerce/ecom_brand.js"></script>
+    <script src="controllers/ecommerce/ecom_category.js"></script>
+    <script src="controllers/ecommerce/category.js"></script>
+
+</head>
+<body class="layout layout-header-fixed" ng-class="headerShow?'block':''" ng-app="otlbni" ng-init="headerUrl='views/header.html';footerUrl='views/footer.html'">
+    <header id="header" ng-if="headerShow">
+        <div ng-include="headerUrl">
+    </header>
+    <div ng-view ></div>
+    <footer id="footer" ng-if="footerShow">
+        <div ng-include="footerUrl">
+    </footer>
+
+    <script src="assets/js/vendor.min.js"></script>
+    <script src="assets/js/elephant.min.js"></script>
+    <script src="assets/js/application.min.js"></script>
+    <script src="assets/js/profile.min.js"></script>
+    <script src="assets/js/demo.min.js"></script>
+    <script src="https://cdn.datatables.net/1.10.15/js/dataTables.material.min.js"></script>
+</body>
+</html>

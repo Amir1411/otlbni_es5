@@ -104,79 +104,37 @@ exports.my_order = function(req, res){
                 res.status(constants.responseFlags.INVALID_ACCESS_TOKEN).json(response);
                 return;
             } else {
+                var user_id = result[0].user_id;
                 var arrayId = [];
                 for (var i = 0; i < result.length; i++) {
                     var user_id = result[i].user_id;
                     arrayId.push(user_id);
                 }
-                var my_order_url = "SELECT * FROM `order_details` WHERE `created_by_id`=?";
-                connection.query(my_order_url, [arrayId], function(err, result) {
-                    if (err) {
-                        responses.sendError(res);
-                        return;
-                    } else if ( result.length > 0 ) {
-                        var userByArray = [];
-                        for (var i = 0; i < result.length; i++) {
-                            if ( result[i].order_image != "" ) {
-                                result[i].order_image = "/order/"+result[i].order_image;
-                            }
-                            if ( result[i].order_by_id != "" ) {
-                                var order_by_id = result[i].order_by_id;
-                                userByArray.push(order_by_id);
-                            }
-                        }
 
-                        get_myorder_place(result, function(placeDetails){
-
-                            var my_order_url = "SELECT `user_name`, `profile_url` FROM `user` WHERE `user_id`=?";
-                            connection.query(my_order_url, [userByArray], function(err, userResult) {
-                                if (err) {
-                                    responses.sendError(res);
-                                    return;
-                                } else {
-                                    for (var i = 0; i < userResult.length; i++) {
-                                       if ( userResult[i].profile_url != "" ) {
-                                            userResult[i].profile_url = "/user/"+userResult[i].profile_url;
-                                        }
-                                    }
-                                    
-                                    for (var k = 0; k < result.length; k++) {
-                                        for (var j = 0; j < userResult.length; j++) {
-                                            for (var l = 0; l < placeDetails.length; l++) {
-                                                if ( result[k].order_by_id == "" ) {
-                                                    result[k]["order_by_user_details"] = {};
-                                                } else {
-                                                    result[k]["order_by_user_details"] = userResult[j];
-                                                }
-                                                var placeResponse = {
-                                                    place_name: placeDetails[l].name,
-                                                    photos: placeDetails[l].icon
-                                                }
-                                                result[k]["place_details"] = placeResponse;
-                                            }
-                                        }
-                                    }
-
-                                    var response = {
-                                        flag: 1,
-                                        response: result,
-                                        message: "My order list details"
-                                    };
-                                    // res.send(JSON.stringify(response));
-                                    res.status(constants.responseFlags.ACTION_COMPLETE).json(response);
-                                }
+                async.parallel(
+                    [  
+                        function(callback) {
+                            get_myorderinactive_details(arrayId,req,res,function(get_myorderinactive_details_result){
+                                callback(null,get_myorderinactive_details_result);
                             });
-                        });
-                    } else {
+                        },
+                        //calling total rides for today function
+                        function(callback) {
+                            get_myorderactive_details(arrayId,req,res,function(get_myorderactive_details_result){
+                                callback(null,get_myorderactive_details_result);
+                            });
+                        }
+                    ], function(err, results) {
+                        console.log(err);
+                        console.log(results);
                         var response = {
                             flag: 1,
-                            response: {},
-                            message: "No data found"
-                        };
-                        // res.send(JSON.stringify(response));
-                        res.status(constants.responseFlags.SHOW_ERROR_MESSAGE).json(response);
+                            response: {"inactive_order": results[0], "active_order": results[1]},
+                            message: "Data fetched successfully"
+                        }
+                        res.status(constants.responseFlags.ACTION_COMPLETE).json(response);
                     }
-                });
+                );
             }
         });
     }
@@ -228,6 +186,216 @@ function get_myorder_place(resultItem, callback) {
     }
     // callback(place_details)
 
+}
+
+function get_myorderinactive_details(user_id, req, res, callback) {
+
+    var pending_status = 0;
+    var accept_status = 1;
+    var ontheway_status = 4;
+    var my_order_url = "SELECT * FROM `order_details` WHERE `created_by_id`=? AND `status` NOT IN ("+pending_status+","+accept_status+", "+ontheway_status+")";
+    
+    console.log(my_order_url);
+    connection.query(my_order_url, [user_id], function(err, result) {
+        if (err) {
+            console.log(err);
+            responses.sendError(res);
+            return;
+        } else if ( result.length > 0 ) {
+            var userByArray = [];
+            for (var i = 0; i < result.length; i++) {
+                if ( result[i].order_image != "" ) {
+                    result[i].order_image = "/order/"+result[i].order_image;
+                }
+                if ( result[i].order_by_id != "" ) {
+                    var order_by_id = result[i].order_by_id;
+                    userByArray.push(order_by_id);
+                } 
+            }
+
+            get_myorder_place(result, function(placeDetails){
+                console.log(userByArray);
+                if(userByArray.length > 0){
+                    var my_order_url = "SELECT `user_name`, `profile_url` FROM `user` WHERE `user_id` IN(?)";
+                    connection.query(my_order_url, [userByArray], function(err, userResult) {
+                        if (err) {
+                            console.log(err);
+                            responses.sendError(res);
+                            return;
+                        } else {
+                            for (var i = 0; i < userResult.length; i++) {
+                               if ( userResult[i].profile_url != "" ) {
+                                    userResult[i].profile_url = "/user/"+userResult[i].profile_url;
+                                }
+                            }
+                            
+                            for (var k = 0; k < result.length; k++) {
+                                for (var j = 0; j < userResult.length; j++) {
+                                    for (var l = 0; l < placeDetails.length; l++) {
+                                        if ( result[k].order_by_id == "" ) {
+                                            result[k]["order_by_user_details"] = {};
+                                        } else {
+                                            result[k]["order_by_user_details"] = userResult[j];
+                                        }
+                                        var placeResponse = {
+                                            place_name: placeDetails[l].name,
+                                            photos: placeDetails[l].icon
+                                        }
+                                        result[k]["place_details"] = placeResponse;
+                                    }
+                                }
+                            }
+
+                            // var response = {
+                            //     flag: 1,
+                            //     response: result,
+                            //     message: "My order list details"
+                            // };
+                            // // res.send(JSON.stringify(response));
+                            // res.status(constants.responseFlags.ACTION_COMPLETE).json(response);
+                            callback(result);
+                        }
+                    });
+                } else {
+                            
+                    for (var k = 0; k < result.length; k++) {
+                        for (var l = 0; l < placeDetails.length; l++) {
+                            result[k]["order_by_user_details"] = {};
+                            var placeResponse = {
+                                place_name: placeDetails[l].name,
+                                photos: placeDetails[l].icon
+                            }
+                            result[k]["place_details"] = placeResponse;
+                        }
+                    }
+
+                    // var response = {
+                    //     flag: 1,
+                    //     response: result,
+                    //     message: "My order list details"
+                    // };
+                    // // res.send(JSON.stringify(response));
+                    // res.status(constants.responseFlags.ACTION_COMPLETE).json(response);
+                    callback(result);
+                }
+            });
+        } else {
+            // var response = {
+            //     flag: 1,
+            //     response: {},
+            //     message: "No data found"
+            // };
+            // // res.send(JSON.stringify(response));
+            // res.status(constants.responseFlags.SHOW_ERROR_MESSAGE).json(response);
+            var result = [];
+            callback(result);
+        }
+    });
+
+}
+
+function get_myorderactive_details(user_id, req, res, callback) {
+
+    var pending_status = 0;
+    var accept_status = 1;
+    var ontheway_status = 4;
+    var my_order_url = "SELECT * FROM `order_details` WHERE `created_by_id`=? AND `status` IN("+pending_status+","+accept_status+","+ontheway_status+")";
+    connection.query(my_order_url, [user_id], function(err, result) {
+        if (err) {
+            console.log(err);
+            responses.sendError(res);
+            return;
+        } else if ( result.length > 0 ) {
+            var userByArray = [];
+            for (var i = 0; i < result.length; i++) {
+                if ( result[i].order_image != "" ) {
+                    result[i].order_image = "/order/"+result[i].order_image;
+                }
+                if ( result[i].order_by_id != "" ) {
+                    var order_by_id = result[i].order_by_id;
+                    userByArray.push(order_by_id);
+                } 
+            }
+
+            get_myorder_place(result, function(placeDetails){
+                console.log(userByArray);
+                if(userByArray.length > 0){
+                    var my_order_url = "SELECT `user_name`, `profile_url` FROM `user` WHERE `user_id` IN(?)";
+                    connection.query(my_order_url, [userByArray], function(err, userResult) {
+                        if (err) {
+                            console.log(err);
+                            responses.sendError(res);
+                            return;
+                        } else {
+                            for (var i = 0; i < userResult.length; i++) {
+                               if ( userResult[i].profile_url != "" ) {
+                                    userResult[i].profile_url = "/user/"+userResult[i].profile_url;
+                                }
+                            }
+                            
+                            for (var k = 0; k < result.length; k++) {
+                                for (var j = 0; j < userResult.length; j++) {
+                                    for (var l = 0; l < placeDetails.length; l++) {
+                                        if ( result[k].order_by_id == "" ) {
+                                            result[k]["order_by_user_details"] = {};
+                                        } else {
+                                            result[k]["order_by_user_details"] = userResult[j];
+                                        }
+                                        var placeResponse = {
+                                            place_name: placeDetails[l].name,
+                                            photos: placeDetails[l].icon
+                                        }
+                                        result[k]["place_details"] = placeResponse;
+                                    }
+                                }
+                            }
+
+                            // var response = {
+                            //     flag: 1,
+                            //     response: result,
+                            //     message: "My order list details"
+                            // };
+                            // // res.send(JSON.stringify(response));
+                            // res.status(constants.responseFlags.ACTION_COMPLETE).json(response);
+                            callback(result);
+                        }
+                    });
+                } else {
+                            
+                    for (var k = 0; k < result.length; k++) {
+                        for (var l = 0; l < placeDetails.length; l++) {
+                            result[k]["order_by_user_details"] = {};
+                            var placeResponse = {
+                                place_name: placeDetails[l].name,
+                                photos: placeDetails[l].icon
+                            }
+                            result[k]["place_details"] = placeResponse;
+                        }
+                    }
+
+                    // var response = {
+                    //     flag: 1,
+                    //     response: result,
+                    //     message: "My order list details"
+                    // };
+                    // // res.send(JSON.stringify(response));
+                    // res.status(constants.responseFlags.ACTION_COMPLETE).json(response);
+                    callback(result);
+                }
+            });
+        } else {
+            // var response = {
+            //     flag: 1,
+            //     response: {},
+            //     message: "No data found"
+            // };
+            // // res.send(JSON.stringify(response));
+            // res.status(constants.responseFlags.SHOW_ERROR_MESSAGE).json(response);
+            var result = [];
+            callback(result);
+        }
+    });
+    
 }
 
 exports.create_order = function(req, res) {
@@ -387,7 +555,7 @@ exports.getCreateOrderDetails = function(req, res) {
                 res.status(constants.responseFlags.INVALID_ACCESS_TOKEN).json(response);
                 return;
             } else {
-                var user_id = result[0].user_id;
+                // var user_id = result[0].user_id;
 
                 if ( notification_type == "1" ) {
                     var sql = "SELECT * FROM `order_details` WHERE `order_id`=?";
@@ -397,6 +565,7 @@ exports.getCreateOrderDetails = function(req, res) {
                             return;
                         } else {
                             var place_id = orderDetails[0].place_id;
+                            var user_id = orderDetails[0].created_by_id;
 
                             async.parallel(
                                 [  
@@ -469,4 +638,162 @@ function get_user_details(user_id,req, res, callback) {
             callback(user_details[0]);
         }
     });
+}
+
+exports.create_offer = function(req, res) {
+    var access_token = req.body.access_token;
+    var offer_created_to_id = req.body.created_by_id;
+    var order_id = req.body.order_id;
+    var amount = req.body.amount;
+
+    var manvalues = [access_token, offer_created_to_id, order_id];
+    var checkblank = commonFunc.checkBlank(manvalues);
+    if (checkblank == 1) {
+        responses.parameterMissingResponse(res);
+        return;
+    } else {
+        utils.authenticateUser(access_token, function(result) {
+            if (result == 0) {
+                var response = {
+                    flag: 1,
+                    response: {},
+                    message: "Invalid access token."    
+                };
+                // res.send(JSON.stringify(response));
+                res.status(constants.responseFlags.INVALID_ACCESS_TOKEN).json(response);
+                return;
+            } else {
+                var offer_created_by_id = result[0].user_id;
+                var offer_unique_id = utils.generateRandomString();
+                var offer_id = md5(offer_unique_id);
+                var status = 0; // 0 = no action 1= accepted 2 = rejected
+                var currentTime = new Date();
+                var created_on = Math.round(currentTime.getTime() / 1000);
+
+                var sql = "INSERT INTO `offer`(`offer_id`, `offer_created_by_id`, `offer_created_to_id`, `order_id`, `status`, `amount`, `created_on`) VALUES (?,?,?,?,?,?,?)";
+                var value = [offer_id, offer_created_by_id, offer_created_to_id, order_id, status, amount, created_on];
+                connection.query(sql, value, function (err, result) {
+                    if (err) {
+                        responses.sendError(res);
+                        return;
+                    } else {
+
+                        var sql = "SELECT * FROM `user` WHERE `user_id`=?";
+                        connection.query(sql, [offer_created_to_id], function(err, userResult){
+                            if (err) {
+                                responses.sendError(res);
+                                return;
+                            } else {
+                                console.log(userResult);
+                                var notification_unique_id = utils.generateRandomString();
+                                var notification_id = md5(notification_unique_id);
+                                var currentTime = new Date();
+                                var created_on = Math.round(currentTime.getTime() / 1000);
+                                var notification_type = "2";
+                                var notification_text = "Offer for your order";
+                                
+                                var sql = "INSERT INTO `notification`(`notification_id`,`sender_id`, `reciever_id`, `notification_type`, `notification_text`, `notification_type_id`, `created_on`) VALUES (?,?,?,?,?,?,?)";
+                                var value = [notification_id, offer_created_by_id, offer_created_to_id, notification_type, notification_text , order_id, created_on];
+                                connection.query(sql, value, function (err, result) {
+                                    console.log(err);
+                                    if (err) {
+                                        responses.sendError(res);
+                                        return;
+                                    } else {
+                                        var serverKey = config.get('serverFCMKey'); //put your server key here 
+                                        console.log(userResult[0].device_token);
+                                        var fcm = new FCM(serverKey);
+                                     
+                                        var message = { //this may vary according to the message type (single recipient, multicast, topic, et cetera) 
+                                            to: userResult[0].device_token, 
+                                            collapse_key: 'otlbni',
+                                            
+                                            notification: {
+                                                title: notification_type, 
+                                                body: notification_text 
+                                            }
+                                        };
+                                        
+                                        fcm.send(message, function(err, response){
+                                            if (err) {
+                                                // return callback(0);
+                                                console.log(err);
+                                            } else {
+                                                // return callback(1);
+                                                console.log("jhj"+response);
+                                            }
+                                        });
+                                    }
+                                });
+                            }
+                        });
+
+                        var response = {
+                            flag: 1,
+                            response: "Offer created successfully.",
+                            message: "Offer created successfully."
+                        };
+                        res.status(constants.responseFlags.ACTION_COMPLETE).json(response);
+                    }
+                });
+            }
+        });
+    }
+}
+
+exports.cancel_order = function(req, res) {
+    var access_token = req.body.access_token;
+    var order_id = req.body.order_id;
+
+    var manvalues = [access_token, order_id];
+    var checkblank = commonFunc.checkBlank(manvalues);
+    if (checkblank == 1) {
+        responses.parameterMissingResponse(res);
+        return;
+    } else {
+        utils.authenticateUser(access_token, function(result) {
+            if (result == 0) {
+                var response = {
+                    flag: 1,
+                    response: {},
+                    message: "Invalid access token."    
+                };
+                res.status(constants.responseFlags.INVALID_ACCESS_TOKEN).json(response);
+                return;
+            } else {
+                var user_id = result[0].user_id;
+                var pending_status = 0;
+                var sql = "SELECT * FROM `order_details` WHERE `order_id`=? AND `status`=? AND `created_by_id`=?";
+                connection.query(sql, [order_id, pending_status, user_id], function(err, checkResult){
+                    if ( err ) {
+                        responses.sendError(res);
+                        return;
+                    } else if ( checkResult.length > 0 ){
+                        var cancelled_status = 5;
+                        var update_sql = "UPDATE `order_details` SET `status`='"+cancelled_status+"' WHERE `order_id`=? AND `created_by_id`=?";
+                        connection.query(update_sql, [order_id, user_id], function(err, updateResult) {
+                            if (err) {
+                                responses.sendError(res);
+                                return;
+                            } else {
+                                var response = {
+                                    flag: 1,
+                                    response: {},
+                                    message: "Order cancelled successfully"
+                                }
+                                res.status(constants.responseFlags.ACTION_COMPLETE).json(response);
+                            }
+                        });
+                    } else {
+                        var response = {
+                            flag: 1,
+                            response: {},
+                            message: "This order can not be cancelled"
+                        }
+                        res.status(constants.responseFlags.ACTION_COMPLETE).json(response);
+                    }
+                });
+            }
+        });
+    }
 }

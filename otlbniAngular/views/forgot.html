@@ -1,0 +1,29 @@
+<div class="login">
+	<div class="login-body">
+		<a class="login-brand" href="/">
+			<img class="img-responsive" src="assets/img/logo.png" alt="Otlbni">
+		</a>
+		<div class="login-form">
+			<form data-toggle="validator">
+				<div class="form-group success-container" ng-show="success_msg">
+					<div class="alert alert-success alert-dismissable fade in">							
+						<a href="#" class="close" data-dismiss="alert" aria-label="close">×</a>							
+						<!-- <strong>Success! </strong> --><span class="errorContainer"><!-- {{success_msg_text}} -->Please check your mail</span>						
+					</div>
+				</div>
+				<div ng-show="showForm">
+					<div class="form-group">
+						<label>Email</label>
+						<input class="form-control" type="text" ng-model="forgotEmail">
+						<span class="error" ng-show="forgotEmail_error">*{{forgotEmail_msg}}</span>
+						<p class="help-block">
+							<small>If you've forgotten your password, we'll send you an email to reset your password.</small>
+						</p>
+					</div>
+					<button class="btn btn-danger btn-block" type="submit" ng-click="forgotPassword()">Send password reset email</button>
+				</div>
+			</form>
+			<a href="/" style="text-decoration: none;margin-top: 5px;display: block;"><button class="btn btn-primary btn-block" type="submit">Back to login</button></a>
+		</div>
+	</div>
+</div>

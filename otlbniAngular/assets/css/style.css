@@ -1,0 +1,299 @@
+.userDpImg{display: inline-block;margin-right: 5px;width: 130px;}
+.padding-5 {
+    padding: 5px
+}
+.padding-top-5 {
+    padding-top: 5px
+}
+.padding-bottom-5 {
+    padding-bottom: 5px
+}
+.padding-left-5 {
+    padding-left: 5px
+}
+.padding-right-5 {
+    padding-right: 5px
+}
+.padding-right-4 {
+    padding-right: 4px
+}
+.padding-5-0 {
+    padding: 5px 0
+}
+.padding-0-5 {
+    padding: 0 5px
+}
+.padding-10 {
+    padding: 10px
+}
+.padding-top-10 {
+    padding-top: 10px
+}
+.padding-bottom-10 {
+    padding-bottom: 10px
+}
+.padding-left-10 {
+    padding-left: 10px !important;
+}
+.padding-right-10 {
+    padding-right: 10px
+}
+.padding-10-0 {
+    padding: 10px 0
+}
+.padding-0-10 {
+    padding: 0 10px
+}
+.padding-15 {
+    padding: 15px
+}
+.padding-top-15 {
+    padding-top: 15px !important;
+}
+.padding-bottom-15 {
+    padding-bottom: 15px ;
+}
+.padding-left-15 {
+    padding-left: 15px
+}
+.padding-left-20 {
+    padding-left: 20px;
+}
+.padding-right-15 {
+    padding-right: 15px
+}
+.padding-15-0 {
+    padding: 15px 0
+}
+.padding-0-15 {
+    padding: 0 15px
+}
+.margin-2 {
+    margin: 2px
+}
+.margin-top-2 {
+    margin-top: 2px
+}
+.margin-bottom-2 {
+    margin-bottom: 2px
+}
+.margin-left-2 {
+    margin-left: 2px
+}
+.margin-right-2 {
+    margin-right: 2px
+}
+.margin-2-0 {
+    margin: 2px 0
+}
+.margin-0-2 {
+    margin: 0 2px
+}
+.margin-5 {
+    margin: 5px
+}
+.margin-top-5 {
+    margin-top: 5px
+}
+.margin-bottom-5 {
+    margin-bottom: 5px
+}
+.margin-left-5 {
+    margin-left: 5px
+}
+.margin-right-5 {
+    margin-right: 5px
+}
+.margin-5-0 {
+    margin: 5px 0
+}
+.margin-0-5 {
+    margin: 0 5px
+}
+.margin-10 {
+    margin: 10px
+}
+.margin-top-10 {
+    margin-top: 10px
+}
+.margin-bottom-10 {
+    margin-bottom: 10px
+}
+.margin-left-10 {
+    margin-left: 10px
+}
+.margin-right-10 {
+    margin-right: 10px
+}
+.margin-10-0 {
+    margin: 10px 0
+}
+.margin-0-10 {
+    margin: 0 10px
+}
+.margin-15 {
+    margin: 15px
+}
+.margin-top-15 {
+    margin-top: 15px
+}
+.margin-bottom-15 {
+    margin-bottom: 15px
+}
+.margin-bottom-25 {
+    margin-bottom: 25px
+}
+.margin-left-15 {
+    margin-left: 15px
+}
+.margin-right-15 {
+    margin-right: 15px
+}
+.margin-15-0 {
+    margin: 15px 0
+}
+.margin-0-15 {
+    margin: 0 15px
+}
+.margin-bottom-50 {
+    margin-bottom: 50px
+}
+.no-border {
+    border: none
+}
+.custom-col-1 {
+    width: 20%
+}
+.no-radius {
+    border-radius: 0 !important;
+}
+.no-margin {
+    margin: 0
+}
+.no-margin-bottom {
+    margin-bottom: 0!important
+}
+.no-margin-left {
+    margin-left: 0!important
+}
+.no-margin-top {
+    margin-top: 0!important
+}
+.no-margin-right {
+    margin-right: 0!important
+}
+.margin-auto {
+    margin: auto
+}
+.no-padding {
+    padding: 0
+}
+.no-padding-bottom {
+    padding-bottom: 0!important
+}
+.no-padding-left {
+    padding-left: 0!important
+}
+.no-padding-top {
+    padding-top: 0!important
+}
+.no-padding-right {
+    padding-right: 0!important
+}
+.no-border-bottom {
+    border-bottom: 0!important
+}
+.no-border-left {
+    border-left: 0!important
+}
+.no-border-top {
+    border-top: 0!important
+}
+.no-border-right {
+    border-right: 0!important
+}
+.border2px{border: solid 2px #333;padding: 10px 0px;margin-top: 10px; }
+.view-add-pic{padding: 10px 5px;border: solid 1px #cecece;}
+.view-add-pic .remove-bt{cursor: pointer; padding: 2px 8px;
+    background: rgba(0,0,0,.9);
+    z-index: 9999999;
+    border-radius: 50%;}
+.cursor {
+    cursor: pointer
+}
+.background-none {
+    background: 0 0
+}
+.background-color1 {
+    background-color: #383f48
+}
+.border1 {
+    border: 1px solid #ccc
+}
+.border2{
+        border: solid 1px grey !important;
+}
+.border1-l {
+    border-left: solid 1px #ccc
+}
+.border1-r {
+    border-right: solid 1px #ccc
+}
+.border1-t {
+    border-top: solid 1px #ccc
+}
+.border1-b {
+    border-bottom: solid 1px #ccc
+}
+.bg-white {
+    background: #fff
+}
+.Background1,
+.Background2,
+.Background3,
+.Background4 {
+    background-size: cover
+}
+.box-shadow {
+    box-shadow: 0 2px 6px rgba(0, 0, 0, .2)
+}
+.text-uppercase {
+    text-transform: uppercase
+}
+.textshadow-none {
+    text-shadow: none
+}
+.float-left {
+    float: left
+}
+.float-right {
+    float: right
+}
+
+.opacity-1 {  opacity: 1;}
+
+.text-white { color: #fff !important;}
+
+.close-btn {
+	
+position: absolute;
+    right: 0px;
+    top: -13px;
+
+}
+
+.navbar-brand-logo {
+    height: 30px;
+    width: auto;
+}
+@media (min-width: 768px) {
+
+	.form-horizontal .control-label {
+    text-align: left;
+   
+}
+}
+.addSubCatBox{border: solid 2px #333;
+    margin-bottom: 20px;
+    padding: 12px 20px;}
+

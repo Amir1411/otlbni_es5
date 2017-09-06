@@ -13,26 +13,64 @@ var async = require('async');
  @ Configurations
  @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
  */
-var Mandrill = {
-    "host" : config.get('nodeMailer.Mandrill.mandrill_host'),
-    "port" : config.get('nodeMailer.Mandrill.mandrill_port'),
-    "auth" : {
-        "user":config.get('nodeMailer.Mandrill.mandrill_auth.mandrill_user'),
-        "pass":config.get('nodeMailer.Mandrill.mandrill_auth.mandrill_pass')
-
-    }
-}
 var SendGrid = {
-    "host" : config.get('nodeMailer.SendGrid.SendGrid_host'),
-    //"port" : config.get('nodeMailer.SendGrid.SendGrid_port'),
+    "host" : config.get('nodeMailer.host'),
+    "port" : config.get('nodeMailer.port'),
+    "secure": false,
     "auth" : {
-        "user":config.get('nodeMailer.SendGrid.SendGrid_auth.SendGrid_user'),
-        "pass":config.get('nodeMailer.SendGrid.SendGrid_auth.SendGrid_pass')
+        "user":config.get('nodeMailer.senderEmail'),
+        "pass":config.get('nodeMailer.senderPassword')
 
     }
 }
 
-var transporter = nodeMailerModule.createTransport(smtpTransport(SendGrid));
+var transporter = nodeMailerModule.createTransport(SendGrid);
+
+exports.sendResetPasswordLink = function(user_email, token) {
+
+    var link = config.get('forgotpasswordUrl');
+    link += "?token=" + token + "&email=" + user_email + "&type=0";
+
+    var mailOptions = {
+        from: config.get('nodeMailer.From'),
+        to: user_email,
+        subject: "Reset Password",
+        html: '<!DOCTYPE html>\
+            <html>\
+            <head lang="en">\
+                <meta charset="UTF-8">\
+                <title></title>\
+            </head>\
+            <body>\
+            <table style="margin:auto;width:600px!important;color:#4C4949;border: 1px solid #bbb;" cellspacing="0">\
+                <tr>\
+                    <td style="text-align:center">\
+                      <img src ="http://52.30.101.158:3002/img/logo.png" width="auto" height="150px" style="width: 80px;height: 80px;padding: 30px;">\
+                    </td>\
+                </tr>\
+                <tr style="background-color:#2c3e50">\
+                    <td style="padding:20px;width:100%;">\
+                        <h4 style="width:100%; text-align:center; border-bottom: 2px solid #fff; line-height:0.25em;   margin: -1px 0 10px; ">\
+                            <span style="padding:0 2px;background-color: #2c3e50 ;color:#fff;font-size: 25px;"> OTLBNI </span></h4>\
+                    </td>\
+                </tr>\
+                </tr>\
+                <tr>\
+                    <td style="padding:30px;font-size:18px;">\
+                        <p>Please click on the below link to reset your password</p>\
+                        <a href="'+link+'" type="button" style="-webkit-box-shadow: none;box-shadow: none;outline: 0;position: relative;text-decoration: none;text-transform: none;-webkit-transition: all .3s;-o-transition: all .3s;transition: all .3s;background-color: #2c3e50;border-color: #2c3e50;color: #fff;padding: 10px;margin-top: 5px;">RESET PASSWORD</a>\
+                    </td>\
+                </tr>\
+            </table>\
+            </body>\
+        </html>'
+    };
+    transporter.sendMail(mailOptions, function(error, info) {
+        if (error) {
+            console.log(error);
+        }
+    });
+}
 
 
 /*
@@ -41,158 +79,3 @@ var transporter = nodeMailerModule.createTransport(smtpTransport(SendGrid));
  @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
  */
 
-var errorResponseObject = {
-    status: 500,
-    message: 'Something Went Wrong'
-};
-var successResponseObject = {
-    status: 200,
-    message: 'Success'
-};
-
-
-/*
- @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
- @ sendEmail Function which is exported to be called from anywhere in the application
- @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
- */
-
-function sendEmailViaTemplate(templateName, receiverDetails, variableDetails, externalCB) {
-    /*
-     Steps To Follow:
-     1) Get Email Template From Database.
-     2) Render HTMl Message and Email Subject with the help of variableInfo
-     3) Build the mailOptions Variable With Above informations
-     4) Finally call the sendMailViaTransporter function
-     */
-
-    var templateName = templateName || null; //Example : 'PB_SIGN_UP_TEMPLATE'
-    var variableDetails = variableDetails || {}; //Example : 'PB_NAME: Shahab', 'PB_EMAIL:shahab@clicklabs.co'
-
-    var mailOptions = {
-        from: null,
-        to: null,
-        subject: null,
-        html: null
-    };
-
-    if(typeof receiverDetails.attachments !== 'undefined')
-    {
-        mailOptions.attachments = receiverDetails.attachments;
-    }
-
-    if (receiverDetails.name) {
-        mailOptions.to = receiverDetails.name + ' <' + receiverDetails.email + '>';
-    } else {
-        mailOptions.to = receiverDetails.email;
-    }
-
-    async.series([
-        function(internalCallback) {
-            getEmailTemplateDataFromSQL(templateName, function(err, templateData, headerFooter) {
-                console.log('email template', err, templateData);
-
-                mailOptions.from = templateData.email_from; // Example: Iggbo Team <support@iggbo.com>
-                mailOptions.subject = renderMessageFromTemplateAndVariables(templateData.email_template_subject, variableDetails); // Example: Welcome To Iggbo
-                mailOptions.html = renderMessageFromTemplateAndVariables(templateData.email_template_html, variableDetails); // Example: Please click on email confirmation link
-
-                var innerHtml = mailOptions.html;
-
-                var finalHtml = headerFooter.email_template_html.replace("{{HTML_CONTENT}}", innerHtml);
-                finalHtml = finalHtml.replace("{{PROJECT_NAME}}",config.get('projectName'));
-
-                if (variableDetails.isAttachHeaderFooter != 0) {
-
-                    var tempVars = {
-
-                        SUBJECT: mailOptions.subject,
-
-
-                    };
-
-
-                    mailOptions.html = renderMessageFromTemplateAndVariables(finalHtml, tempVars);
-                }
-                internalCallback(err, null);
-            });
-        },
-        function(internalCallback) {
-            sendMailViaTransporter(mailOptions, function(err, res) {
-                internalCallback(err, res);
-            })
-        }
-    ], function(err, responses) {
-        if (err) {
-            externalCB(errorResponseObject);
-        } else {
-            externalCB(null, successResponseObject);
-        }
-    });
-}
-
-/*
- @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
- @ getEmailTemplateDataFromSQL Function
- @ This function will fetch the email template details
- @ Requires following parameters
- @ templateName // example : 'PB_Registration_Email'
- @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
- */
-function getEmailTemplateDataFromSQL(templateName, cb) {
-    var sql = "SELECT `email_from`, `email_template_subject`, `email_template_html` , email_template_name FROM `tb_email_templates` WHERE `email_template_name`=? or email_template_name = 'HEADER_FOOTER' LIMIT 2";
-    connection.query(sql, [templateName], function(err, emailTemplateData) {
-
-
-        var emailTemplate = "";
-        var HeaderFooter = "";
-        emailTemplateData.forEach(function(template) {
-
-            if (template.email_template_name == 'HEADER_FOOTER') {
-                HeaderFooter = template;
-            } else {
-                emailTemplate = template;
-            }
-
-        });
-
-        cb(err, emailTemplate, HeaderFooter);
-    });
-}
-
-/*
- @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
- @ sendMailViaTransporter Function
- @ This function will initiate sending email as per the mailOptions are set
- @ Requires following parameters in mailOptions
- @ from:  // sender address
- @ to:  // list of receivers
- @ subject:  // Subject line
- @ html: html body
- @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
- */
-function sendMailViaTransporter(mailOptions, cb) {
-
-    console.log(JSON.stringify(mailOptions));
-    transporter.sendMail(mailOptions, function(error, info) {
-        console.log('Mail Sent Callback Error:', error);
-        console.log('Mail Sent Callback Ifo:', info);
-    });
-    cb(null, null) // Callback is outside as mail sending confirmation can get delayed by a lot of time
-}
-
-/*
- @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
- @ renderMessageFromTemplateAndVariables Helper Function
- @ This function will compile the email template stored in the DB with the data provided and return the output.
- @ Requires following parameters in mailOptions
- @ templateData:  // template data or text to render which will be having variables
- @ variablesData:  // variables values in key-value pair which will replace the variables in templateData
- @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
- */
-function renderMessageFromTemplateAndVariables(templateData, variablesData) {
-    return Handlebars.compile(templateData)(variablesData);
-}
-
-module.exports = {
-    sendEmailViaTemplate: sendEmailViaTemplate
-};

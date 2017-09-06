@@ -1,0 +1,131 @@
+<div class="addCategoryPage">
+	<!--form pop up-->
+	<div id="addCategoryPopup" tabindex="-1" role="dialog" class="modal fade">
+		<div class="backgroundOverlay"></div>
+		<div class="modal-dialog modal-md">
+			<div class="modal-content">
+				<div class="modal-header bg-success">
+					<h4 class="modal-title">Add Category</h4>
+				</div>
+				<div class="modal-body">
+					<div class="panel-body">
+						<form class="form form-horizontal">
+							<div class="form-group" ng-show="success_msg">
+								<div class="alert alert-success alert-dismissable fade in">
+									<a href="#" class="close" data-dismiss="alert" aria-label="close">×</a>							
+									<strong>Success! </strong><span class="errorContainer">{{success_msg_text}}</span>						
+								</div>
+							</div>
+							<div class="form-group" ng-show="error_msg">
+								<div class="alert alert-danger alert-dismissable fade in">							
+									<a href="#" class="close" data-dismiss="alert" aria-label="close">×</a>							
+									<strong>Error! </strong><span class="errorContainer">{{error_msg_text}}</span>						
+								</div>
+							</div>
+	                        <div class="form-group">  
+	                            <label for="email-2" class=" control-label">Name</label>
+	                            <input id="" class="form-control" type="text" ng-model="category_name">  
+	                        	<span class="error" ng-show="category_name_error">*{{category_name_msg}}</span>
+	                        </div>
+	                        <div class="form-group">
+	                            <label for="email-2" class=" control-label">Sort Order</label>
+	                            <input id="" class="form-control" type="text" ng-model="category_sort_order">
+	                        	<span class="error" ng-show="category_sort_order_error">*{{categoryr_sort_order_msg}}</span>
+	                        </div>
+	                        <div class="form-group">
+	                            <label for="address" class=" control-label">Description</label>
+	                            <textarea id="" class="form-control" rows="5" ng-model="category_description"></textarea>
+	                        </div>
+	                        <div class="form-group">
+	                            <button class="btn btn-primary" type="submit" ng-click="add_category()">Save</button>
+	                        </div>
+	                    </form>
+	                </div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<div class="layout-content">
+		<div class="layout-content-body">
+			<div class="title-bar clearfix">
+				<div class="col-xs-6 col-md-6">
+					<h1 class="title-bar-title">
+						<span class="d-ib">Category</span>
+					</h1>
+				</div>
+				<div class="col-xs-6 col-md-6">
+					<div class="pull-right">
+						<div class="form-group text-right">
+							<label for="">&nbsp;&nbsp;</label>
+							<button class="btn btn-primary m-r-sm" type="button" data-toggle="modal" data-target="#addCategoryPopup">Add Category</button>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class="row gutter-xs">	
+				<div class="card">
+					<div class="card-body">
+						<table id="example" class="table" cellspacing="0" width="100%" role="grid" style="width: 100%;">
+					        <thead>
+					            <tr>
+					                <th class="text-center">Sr. No.</th>
+					                <th class="text-center">Name</th>
+					                <th class="text-center">Description</th>
+					                <th class="text-center">Sort order</th>
+					                <th class="text-center">Status</th>
+					                <th class="text-center">Action</th>
+					            </tr>
+					        </thead>
+					        <tbody>
+					            <tr class="text-center">
+					                <td>3</td>
+					                <td>Name</td>
+					                <td>Position</td>
+					                <td>Office</td>
+					                <td><div class="status active">Active</div></td>
+					                <td>
+					                	<a class="btn btn-sm btn-default" href="" title="Edit">
+					                		<i class="fa fa-pencil icon-css pencil-icon"></i>
+					                	</a>
+					                	<span>
+					                		<a class="btn btn-sm btn-default" title="block">
+					                			<i class="fa fa-unlock unblock-icon"></i>
+					                		</a>
+					                	</span>
+					                	<a class="btn btn-sm btn-default" title="Delete">
+					                		<i class="fa fa-asterisk block-icon"></i>
+					                	</a>								
+					                </td>
+					            </tr>
+					            <!-- <tr ng-repeat="(key,list) in masterCategoryList">
+									<td class="text-center">{{list.number}}</td>
+									<td class="text-center">{{list.master_category_name}}</td>
+									<td class="text-center">{{list.master_category_description}}</td>
+									<td class="text-center">{{list.sort_order}}</td>
+									<td class="text-center">
+										<!-- <div ng-class="list.is_active == 1? 'status active': 'status offline'">Active</div> -->
+										<!-- <div class="status active" ng-show="list.is_active">Active</div>
+										<div class="status offline" ng-hide="list.is_active">Offline</div>
+									<td class="text-center" >
+										<a class="btn btn-sm btn-default" href="" title="Edit">
+					                		<i class="fa fa-pencil icon-css pencil-icon"></i>
+					                	</a>
+					                	<span>
+					                		<a class="btn btn-sm btn-default" title="block">
+					                			<i class="fa fa-unlock unblock-icon"></i>
+					                		</a>
+					                	</span>
+					                	<a class="btn btn-sm btn-default" title="view category" href="/#!/ecommerce/category/{{list.master_category_id}}">
+					                		<i class="fa fa-asterisk block-icon"></i>
+					                	</a>
+									</td> -->
+								<!-- </tr> -->
+					        </tbody>
+					    </table>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>

@@ -17,5 +17,17 @@
         "db_password":"otlbni",
         "database":"otlbni",
         "mysqlPORT":"3306"
-    }
+    },
+    "nodeMailer":{
+        "host":"smtp.gmail.com",
+        "port":587,
+        "senderEmail":"md.amir14@gmail.com",
+        "multipleSupportEmailIds":"md.amir14@gmail.com",
+        "senderPassword":"#*mummy12#",
+        "From":"OTLBNI <md.amir14@gmail.com>",
+        "signature":"OTLBNI Team",
+        "particularSignature":"Best, \nOTLBNI Dev Team ",
+        "devTeamSignature":"Best,\nOTLBNI Dev Team"
+    },
+    "forgotpasswordUrl": "http://52.30.101.158:3002/#!/reset"
 }

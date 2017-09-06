@@ -32,7 +32,7 @@ exports.authenticationHandler =authenticationHandler;
  * -----------------------------------------------
  */
 authenticateAdminAccessToken = function(userAccessToken, callback) {
-    var sql = "SELECT `admin_id` FROM `tb_admin` WHERE `access_token`=? LIMIT 1";
+    var sql = "SELECT * FROM `admin` WHERE `access_token`=? LIMIT 1";
     connection.query(sql, [userAccessToken], function(err, result) {
 
         console.log(err)

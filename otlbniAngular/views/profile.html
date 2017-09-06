@@ -1,0 +1,293 @@
+<div class="profilePage">
+	<div class="layout-content">
+
+		<!-- For Change Password -->
+		<div id="changePasswordPopup" tabindex="-1" role="dialog" class="modal fade">
+			<div class="modal-dialog">
+				<div class="modal-content">
+					<div class="modal-header bg-primary">
+						<button type="button" class="close" data-dismiss="modal">
+							<span aria-hidden="true">×</span>
+							<span class="sr-only">Close</span>
+						</button>
+						<h4 class="modal-title">Change Password</h4>
+					</div>
+					<div class="modal-body">
+						<div class="card-body">
+							<div class="row">
+								<div class="col-sm-12 col-md-12">
+									<div class="demo-form-wrapper">
+										<form class="form form-horizontal" ng-submit="changePassword()">
+											<div class="form-group success-container" ng-show="success_msg">
+												<div class="alert alert-success alert-dismissable fade in">							
+													<a href="#" class="close" data-dismiss="alert" aria-label="close">×</a>							
+													<strong>Success! </strong><span class="errorContainer">{{success_msg_text}}</span>						
+												</div>
+											</div>
+											<div class="form-group">
+												<label for="" class=" control-label">Old Password</label>
+												<input id="" class="form-control" type="password" ng-model="old_password">
+												<span class="error" ng-show="old_password_error">*{{old_password_msg}}</span>
+											</div>
+											<div class="form-group">
+												<label for="" class="control-label">New Password</label>
+												<input id="" class="form-control" type="password" ng-model="new_password">
+												<span class="error" ng-show="new_password_error">*{{new_password_msg}}</span>
+											</div>
+											<div class="form-group">
+												<label for="" class="control-label">Confirm Password</label>
+												<input id="" class="form-control" type="password" ng-model="confirm_password">
+												<span class="error" ng-show="confirm_password_error">*{{confirm_password_msg}}</span>
+											</div>
+											<div class="form-group">
+												<div class="row">
+													<div class="col-sm-4  col-md-4">
+														<button class="btn btn-primary btn-block" type="submit">Submit</button>
+													</div>
+												</div>
+											</div>
+										</form>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+					<div class="modal-footer">
+						<!-- <button class="btn btn-primary" data-dismiss="modal" type="button">Continue</button>
+						<button class="btn btn-default" data-dismiss="modal" type="button">Cancel</button> -->
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<!-- For Edit Profile -->
+		<div id="editProfilePopup" tabindex="-1" role="dialog" class="modal fade">
+			<div class="modal-dialog">
+				<div class="modal-content">
+					<div class="modal-header bg-primary">
+						<button type="button" class="close" data-dismiss="modal">
+							<span aria-hidden="true">×</span>
+							<span class="sr-only">Close</span>
+						</button>
+						<h4 class="modal-title">Edit Profile</h4>
+					</div>
+					<div class="modal-body">
+						<div class="card">
+							<div class="card-body">
+								<div class="row">
+									<div class="col-sm-12 col-md-12">
+										<div class="demo-form-wrapper">
+											<form class="form form-horizontal">
+												<div class="form-group success-container" ng-show="update_success_msg">
+													<div class="alert alert-success alert-dismissable fade in">							
+														<a href="#" class="close" data-dismiss="alert" aria-label="close">×</a>							
+														<strong>Success! </strong><span class="errorContainer">{{update_success_msg_text}}</span>						
+													</div>
+												</div>
+												<div class="form-group">
+													<label class="control-label">Name</label>
+													<input class="form-control" type="text" ng-model="edit_name">
+													<span class="error" ng-show="edit_name_error">*{{edit_name_msg}}</span>
+												</div>
+												<div class="form-group">
+													<label class="control-label">Email</label>
+													<input class="form-control" type="text" ng-model="edit_email">
+													<span class="error" ng-show="edit_email_error">*{{edit_email_msg}}</span>
+												</div>
+												<div class="form-group">
+													<label class="control-label">Phone</label>
+													<input class="form-control" type="text" ng-model="edit_phone_number">
+													<span class="error" ng-show="edit_phone_number_error">*{{edit_phone_number_msg}}</span>
+												</div>
+												<div class="form-group">
+													<label class=" control-label">Address</label>
+													<textarea id="" class="form-control" rows="5" ng-model="edit_address"></textarea>
+													<span class="error" ng-show="edit_address_error">*{{edit_address_msg}}</span>
+												</div>
+											</form>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+					<div class="modal-footer">
+						<button class="btn btn-primary" type="button" ng-click="updateProfile()">Submit</button>
+						<button class="btn btn-default" data-dismiss="modal" type="button">Cancel</button>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<!-- For profile Profile -->
+		<div id="profilePicPopup" tabindex="-1" role="dialog" class="modal fade">
+			<div class="modal-dialog">
+				<div class="modal-content">
+					<div class="modal-header bg-primary">
+						<button type="button" class="close" data-dismiss="modal">
+							<span aria-hidden="true">×</span>
+							<span class="sr-only">Close</span>
+						</button>
+						<h4 class="modal-title">Change Profile Pic</h4>
+					</div>
+					<div class="modal-body">
+						<div class="card">
+							<div class="card-body">
+							</div>
+						</div>
+					</div>
+					<div class="modal-footer">
+						<button class="btn btn-primary" data-dismiss="modal" type="button">Continue</button>
+						<button class="btn btn-default" data-dismiss="modal" type="button">Cancel</button>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div class="profile">
+			<div class="profile-header">
+				<div class="profile-cover">
+					<div class="profile-container">
+						<div class="profile-card">
+							<div class="profile-avetar">
+								<img class="profile-avetar-img" width="128" height="128" ng-src="{{profile_img}}" alt="Teddy Wilson">
+								<div class="inputFileWrap">
+									<input type="file" class="inputFile preview_images_file" id="images" name="images[]" multiple="" file-model ng-model="profile_value">
+									<label for="file">
+										<i class="icon icon-camera" aria-hidden="true"></i>
+									</label>
+								</div>
+							</div>
+							<div class="profile-overview">
+								<h1 class="profile-name">{{name}}</h1>
+								<!-- <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Nam quae, quam reprehenderit blanditiis. Necessitatibus et vitae</p> -->
+							</div>
+						</div>
+						<div class="profile-tabs">
+							<ul class="profile-nav">
+								<li class="active">
+									<a href="javascript:void(0)">Details</a>
+								</li>
+							</ul>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class="profile-body">
+				<div class="col-md-6">
+					<div class="card">
+						<div class="card-body">
+							<div class="card-search">
+								<div class="card-search-results">
+									<div class="timeline">
+										<div class="timeline-item">
+											<div class="timeline-segment">
+												<div class="timeline-divider"></div>
+											</div>
+											<div class="timeline-content"></div>
+										</div>
+										<div class="timeline-item">
+											<div class="timeline-segment">
+												<div class="timeline-media bg-primary circle sq-24">
+													<div class="icon icon-check"></div>	
+												</div>
+											</div>
+											<div class="timeline-content">
+												<div class="timeline-row">
+													<div class="media">
+														<div class="media-body">
+															<h5 class="m-y-0">Name</h5>
+															<p>
+																<small>{{name}}</small>
+															</p>
+														</div>
+													</div>
+												</div>
+											</div>
+										</div>
+										<div class="timeline-item">
+											<div class="timeline-segment">
+												<div class="timeline-media bg-primary circle sq-24">
+													<div class="icon icon-check"></div>
+												</div>
+											</div>
+											<div class="timeline-content">
+												<div class="timeline-row">
+													<div class="media">
+														<div class="media-body">
+															<h5 class="m-y-0">Phone</h5>
+															<p><small>{{phone_number}}</small></p>
+														</div>
+													</div>
+												</div>
+											</div>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+				<div class="col-md-6">
+					<div class="card">
+						<div class="card-body">
+							<div class="card-search">
+								<div class="card-search-results">
+									<div class="timeline">
+										<div class="timeline-item">
+											<div class="timeline-segment">
+												<div class="timeline-divider"></div>
+											</div>
+											<div class="timeline-content"></div>
+										</div>
+										<div class="timeline-item">
+											<div class="timeline-segment">
+												<div class="timeline-media bg-primary circle sq-24">
+													<div class="icon icon-check"></div>
+												</div>
+											</div>
+											<div class="timeline-content">
+												<div class="timeline-row">
+													<div class="media">
+														<div class="media-body">
+															<h5 class="m-y-0">Email</h5>
+															<p>
+																<small>{{email}}</small>
+															</p>
+														</div>
+													</div>
+												</div>
+											</div>
+										</div>
+										<div class="timeline-item">
+											<div class="timeline-segment">
+												<div class="timeline-media bg-primary circle sq-24">
+													<div class="icon icon-check"></div>
+												</div>
+											</div>
+											<div class="timeline-content">
+												<div class="timeline-row">
+													<div class="media">
+														<div class="media-body">
+															<h5 class="m-y-0">Address</h5>
+															<p><small>{{address}}</small></p>
+														</div>
+													</div>	
+												</div>
+											</div>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+				<div class="clearfix"></div>
+				<div class="col-md-12">     
+					<button class="btn btn-primary btn-sm pull-right" data-toggle="modal" data-target="#editProfilePopup" type="button">Edit profile</button>    
+					<button class="btn btn-primary btn-sm pull-right margin-right-5" data-toggle="modal" data-target="#changePasswordPopup" type="button" ng-click="openChangePasswordPopup()">Change Password</button>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>

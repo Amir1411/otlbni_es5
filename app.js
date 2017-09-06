@@ -25,10 +25,12 @@ var csv = require('express-csv');
 var multer = require('multer');
 var connection_sql = require('./routes/connection');
 
+var admin_panel = require('./routes/admin_panel');
 var user_panel = require('./routes/user_panel');
 var places_panel = require('./routes/places');
 var order_panel = require('./routes/order');
 var notification = require('./routes/notification');
+var ecommerce_panel = require('./routes/ecommerce/add_category');
 
 console.log(user_panel);
 if (process.env.NODE_ENV != 'localhost') {
@@ -53,6 +55,18 @@ var storage = multer.diskStorage({
     }
 });
 
+var storageAdmin = multer.diskStorage({
+    destination: function(req, file, callback) {
+        // console.log(file);
+        callback(null, './uploads/admin');
+    },
+    filename: function(req, file, callback) {
+        // console.log(file);
+        var fileUniqueName = md5(Date.now());
+        callback(null,  fileUniqueName + path.extname(file.originalname));
+    }
+});
+
 var storageOrder = multer.diskStorage({
     destination: function(req, file, callback) {
         // console.log(file);
@@ -67,20 +81,23 @@ var storageOrder = multer.diskStorage({
 
 var upload = multer({ storage: storage });
 var uploadOrder = multer({ storage: storageOrder });
+var uploadAdmin = multer({ storage: storageAdmin });
 
 // all environments=
 app.use(express.static(path.join(__dirname, 'uploads')));
+app.use(express.static(path.join(__dirname, 'public')));
 
 app.set('port', process.env.PORT || config.get('PORT'));
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'jade');
-app.use(bodyParser.urlencoded({
-    extended: true
-}));
+app.use(bodyParser.urlencoded({limit: '5mb', extended: true}));
 app.use(bodyParser.json());
 app.use(favicon(__dirname + '/views/favicon.ico'));
 app.use(logger('dev'));
 app.use(methodOverride());
+
+app.use(express.static(path.join(__dirname, 'otlbniAngular')));
+
 
 // development only
 if ('development' == app.get('env')) {
@@ -101,6 +118,10 @@ logs = log;
 app.use(function(req, res, next) {
 
     res.header("Access-Control-Allow-Origin", "*");
+    res.header("Access-Control-Allow-Credentials", "true");
+    res.header("Access-Control-Allow-Methods", "GET,HEAD,OPTIONS,POST,PUT");
+    // res.header("Access-Control-Allow-Headers", "Access-Control-Allow-Headers, Origin,Accept, X-Requested-With, Content-Type, Access-Control-Request-Method, Access-Control-Request-Headers");
+    res.header("Access-Control-Allow-Headers", "Content-Type, authorization");
     log("Api Hit");
 
     var time = new Date();
@@ -141,11 +162,29 @@ app.post('/get_search_list', places_panel.get_search_list);
 app.post('/create_order', uploadOrder.single('order_image'), order_panel.create_order);
 app.post('/pending_order', order_panel.pending_order);
 app.post('/my_order', order_panel.my_order);
+app.post('/cancel_order', order_panel.cancel_order);
 app.post('/getCreateOrderDetails', order_panel.getCreateOrderDetails);
 
 //.......................NOTIFICATION PANEL API's.............................
 
-app.post('/get_user_notification_list', notification.get_user_notification_list)
+app.post('/get_user_notification_list', notification.get_user_notification_list);
+
+app.post('/admin_login', admin_panel.login);
+app.post('/forgot_password', admin_panel.forgot_password);
+app.post('/get_details', admin_panel.get_details);
+app.post('/change_password', admin_panel.change_password);
+app.post('/update_thumbnail', uploadAdmin.single('image'), admin_panel.update_thumbnail);
+app.post('/userlist', admin_panel.userlist);
+app.post('/courierlist', admin_panel.courierlist);
+app.post('/block_unblock_user', admin_panel.block_unblock_user);
+app.post('/getCourierPlaceDetails', admin_panel.getCourierPlaceDetails);
+app.post('/update_profile', admin_panel.update_profile);
+app.post('/check_verification_token', admin_panel.check_verification_token);
+
+// ....................... Ecommerce Admin Panel API ..........................
+
+app.post('/add_master_category', ecommerce_panel.add_master_category);
+app.post('/get_master_category_details', ecommerce_panel.get_master_category_details);
 
 // app.post('/my_order', order_panel.my_order);
 
