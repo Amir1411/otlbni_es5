@@ -30,7 +30,7 @@
 				<a class="navbar-brand navbar-brand-center" href="/">
 					<img class="navbar-brand-logo" src="assets/img/logo-white.png" alt="Elephant">
 				</a>
-				<button class="navbar-toggler visible-xs-block collapsed" type="button" data-toggle="collapse" data-target="#sidenav">
+				<button class="navbar-toggler visible-xs-block collapsed" id="resSidebar-toggler" type="button" data-toggle="collapse" data-target="#sidenav" ng-click="sidebarResToggle()">
 					<span class="sr-only">Toggle navigation</span>
 					<span class="bars">
 						<span class="bar-line bar-line-1 out"></span>
@@ -46,7 +46,7 @@
 					<span class="sr-only">Toggle navigation</span>
 					<span class="arrow-up"></span>
 					<span class="ellipsis ellipsis-vertical">
-						<img class="ellipsis-object" width="32" height="32" src="assets/img/0180441436.jpg" alt="Teddy Wilson">
+						<img class="ellipsis-object" width="32" height="32" ng-src="{{userDetails.profile_url}}" alt="userDetails.name">
 					</span>
 				</button>
 			</div>
@@ -66,7 +66,7 @@
 					<ul class="nav navbar-nav navbar-right">
 						<li class="dropdown hidden-xs">
 							<button class="navbar-account-btn" data-toggle="dropdown" aria-haspopup="true">
-								<img class="rounded" width="36" height="36" ng-src="{{userDetails.profile_url}}" alt="Teddy Wilson"> {{userDetails.name}}
+								<img class="rounded" width="36" height="36" ng-src="{{userDetails.profile_url}}" alt="userDetails.name"> {{userDetails.name}}
 								<span class="caret"></span>
 							</button>
 							<ul class="dropdown-menu dropdown-menu-right">
@@ -74,12 +74,12 @@
 								<li><a href="javascript:void(0)" data-toggle="modal" data-target="#logoutPopup">Sign out</a></li>
 							</ul>
 						</li>
-						<li class="visible-xs-block">
+						<!-- <li class="visible-xs-block">
 							<a href="contacts.html">
 								<span class="icon icon-users icon-lg icon-fw"></span>
 								Contacts
 							</a>
-						</li>
+						</li> -->
 						<li class="visible-xs-block">
 							<a href="/#!/profile">
 								<span class="icon icon-user icon-lg icon-fw"></span>
@@ -87,7 +87,7 @@
 							</a>
 						</li>
 						<li class="visible-xs-block">
-							<a href="login-1.html">
+							<a href="javascript:void(0)" data-toggle="modal" data-target="#logoutPopup">
 								<span class="icon icon-power-off icon-lg icon-fw"></span>
 								Sign out
 							</a>
@@ -102,9 +102,9 @@
 			<div class="layout-sidebar-backdrop"></div>
 			<div class="layout-sidebar-body">
 				<div class="custom-scrollbar">
-					<nav class="sidenav-collapse collapse">
+					<nav class="sidenav-collapse collapse" id="resSide-nav">
 						<ul class="sidenav" id="sidenav">
-							<li class="sidenav-search hidden-md hidden-lg">
+							<!-- <li class="sidenav-search hidden-md hidden-lg">
 								<form class="sidenav-form" action="">
 									<div class="form-group form-group-sm">
 										<div class="input-with-icon">
@@ -113,7 +113,7 @@
 										</div>
 									</div>
 								</form>
-							</li>
+							</li> -->
 							<li class="sidenav-heading">Navigation</li>
 							<li class="sidenav-item dashboardPageNav" ng-class="currentRoute == '/dashboard'?'active':''">
 								<a href="/#!/dashboard" aria-haspopup="true">

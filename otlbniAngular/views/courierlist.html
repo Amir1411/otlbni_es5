@@ -48,26 +48,27 @@
 				<div class="col-xs-12">
 					<div class="card">
 						<div class="card-body">
-							<table id="demo-datatables-5" class="table table-striped table-bordered table-nowrap dataTable no-footer" cellspacing="0" width="100%" role="grid" style="width: 100%;">
+							<table id="demo-datatables-5" class="table table-responsive" cellspacing="0" width="100%" role="grid" style="width: 100%;">
 								<thead>
 									<tr>
-										<th class="text-left">ID</th>
-										<th class="text-left">Name</th>
-										<th class="text-left">Profile Pic</th>
-										<th class="text-left">Email</th>
-										<th class="text-left">Marked Store</th>
+										<th class="text-center">ID</th>
+										<th class="text-center">Name</th>
+										<th class="text-center">Profile Pic</th>
+										<th class="text-center">Email</th>
+										<th class="text-center">Marked Store</th>
 									</tr>
 								</thead>
 								<tbody>
 									<tr ng-repeat="(key,list) in userlist">
-										<td class="text-left">{{list.number}}</td>
-										<td class="text-left">{{list.user_name}}</td>
+										<td class="text-center">{{list.number}}</td>
+										<td class="text-center">{{list.user_name}}</td>
 										<td class="text-center">
-											<img class="userDpImg" ng-src="{{list.profile_url}}" alt="State Flag">
+											<!-- <img class="img-responsive" ng-src="{{list.profile_url}}" alt="State Flag" width="70px" style="margin: auto;"> -->
+											<div class="" style="background: url({{list.profile_url}});height: 30px;background-size: cover;background-position: center;background-repeat: no-repeat;width: 30px;margin: auto;">
 										</td>
-										<td class="text-left">{{list.user_email}}</td>
-										<td>
-											<button class="btn btn-info" data-toggle="modal" data-target="#markedStoreModal" type="button" ng-click="getCourierDetails(list.user_id, key)">
+										<td class="text-center">{{list.user_email}}</td>
+										<td class="text-center">
+											<button class="btn btn-success" data-toggle="modal" data-target="#markedStoreModal" type="button" ng-click="getCourierDetails(list.user_id, key)">
 												Marked List
 											</button>
 										</td>

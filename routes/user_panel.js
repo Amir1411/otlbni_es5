@@ -13,6 +13,7 @@ var lookup = require('country-data');
 var messenger = require('./messenger');
 var path = require('path');
 var multer = require('multer');
+var notification = require('./notification');
 
 exports.social_login = function(req, res) {
 	var social_type = req.body.social_type;
@@ -623,20 +624,66 @@ exports.get_user_details = function(req, res) {
 	        		if (err) {
 	        			console.log(err);
 	        		} else {
-	        			result[0]["password"] = "";
-	        			var response = {
-	        				flag: 1,
-	        				response: {
-	        					"user_details": result[0],
-	        					"account_balance": 0,
-	        					"rating": 0,
-	        					"delivery_revenue": 0,
-	        					"bill_paid": 0,
-	        					"order_count": 0
-	        				},
-	        				message: "Successfully data fetched"
-	        			}
-	        			res.status(constants.responseFlags.ACTION_COMPLETE).json(response);
+	        			var revenue_sql = "SELECT * FROM `delivery` WHERE `delivered_to_id`=?";
+	        			connection.query(revenue_sql, [user_id], function(err, revenueResult){
+	        				if (err){
+	        					responses.sendError(res);
+	        					return;
+	        				} else {
+	        					var total_revenue = 0;
+	        					for (var i = 0; i < revenueResult.length; i++) {
+	        						total_revenue = total_revenue + revenueResult[i].delivered_amount;
+	        					}
+	        					var order_count = revenueResult.length;
+
+	        					var bill_sql = "SELECT * FROM `delivery` WHERE `delivered_by_id`=?";
+			        			connection.query(bill_sql, [user_id], function(err, billResult){
+			        				if (err){
+			        					responses.sendError(res);
+			        					return;
+			        				} else {
+			        					var order_cost = 0;
+			        					var delivered_amount = 0;
+			        					for (var i = 0; i < billResult.length; i++) {
+			        						order_cost = order_cost + billResult[i].order_cost;
+			        						delivered_amount = delivered_amount + billResult[i].delivered_amount;
+			        					}
+			        					var total_bill_paid = order_cost + delivered_amount;
+
+			        					var user_rating_sql = "SELECT * FROM `user_rating` WHERE `user_rating_to_id`=?";
+					        			connection.query(bill_sql, [user_id], function(err, userRatingResult){
+					        				if (err){
+					        					responses.sendError(res);
+					        					return;
+					        				} else {
+					        					var user_rating_text = 0;
+					        					for (var i = 0; i < userRatingResult.length; i++) {
+					        						user_rating_text = user_rating_text + userRatingResult[i].rating_count;
+					        					}
+					        					var user_rating_length = userRatingResult.length;
+					        					var user_rating_count  = user_rating_text / user_rating_length;
+
+					        					result[0]["password"] = "";
+							        			var response = {
+							        				flag: 1,
+							        				response: {
+							        					"user_details": result[0],
+							        					"account_balance": result[0].account_balance,
+							        					"rating": user_rating_count,
+							        					"delivery_revenue": total_revenue,
+							        					"bill_paid": total_bill_paid,
+							        					"order_count": order_count,
+							        					"rating_count": user_rating_length
+							        				},
+							        				message: "Successfully data fetched"
+							        			}
+							        			res.status(constants.responseFlags.ACTION_COMPLETE).json(response);
+					        				}
+					        			});
+			        				}
+			        			});
+	        				}
+	        			});
 	        		}
 	        	});
 	        }
@@ -644,78 +691,84 @@ exports.get_user_details = function(req, res) {
 	}
 }
 
-// exports.save_address = function(req, res) {
-// 	var access_token = req.body.access_token;
-// 	var lattitude = req.body.lattitude;
-// 	var longitude = req.body.longitude;
-// 	var address = req.body.address;
-// 	var manvalues = [access_token,lattitude,longitude,address]; 
-// 	var checkblank = commonFunc.checkBlank(manvalues);
-// 	if (checkblank == 1) {
-// 		responses.parameterMissingResponse(res);
-// 		return;
-// 	} else {
-// 		utils.authenticateUser(access_token, function(result) {
-// 	        if (result == 0) {
-// 	             var response = {
-// 					status: constants.responseFlags.INVALID_ACCESS_TOKEN,
-// 					flag: 1,
-// 					response: {},
-// 					message: "Invalid access token."	
-// 				};
-// 				res.send(JSON.stringify(response));
-// 				return;
-// 	        } else {
-// 	        	var user_id = result[0].user_id;
-// 	        	var address_unique_id = utils.generateRandomString();
-//                 var address_id = md5(address_unique_id);
-//                 var currentTime = new Date();
-//                 var created_on = Math.round(currentTime.getTime() / 1000);
+exports.get_other_user_details = function(req, res) {
+	var user_id = req.body.user_id;
+	var manvalues = [user_id];
+	var checkblank = commonFunc.checkBlank(manvalues);
+	if (checkblank == 1) {
+		responses.parameterMissingResponse(res);
+		return;
+	} else {
+    	var user_id = result[0].user_id;
+    	var sql = "SELECT * FROM `user` where `user_id`=? LIMIT 1";
+    	connection.query(sql, [user_id], function(err, result) {
+    		if (err) {
+    			console.log(err);
+    		} else {
+    			var revenue_sql = "SELECT * FROM `delivery` WHERE `delivered_to_id`=?";
+    			connection.query(revenue_sql, [user_id], function(err, revenueResult){
+    				if (err){
+    					responses.sendError(res);
+    					return;
+    				} else {
+    					var total_revenue = 0;
+    					for (var i = 0; i < revenueResult.length; i++) {
+    						total_revenue = total_revenue + revenueResult[i].delivered_amount;
+    					}
+    					var order_count = revenueResult.length;
 
-// 	        	var sql = "INSERT INTO `address`(`address_id`,`user_id`,`lattitude`, `longitude`, `address`, `created_on`) VALUES (?,?,?,?,?,?)";
-// 				var value = [address_id, user_id, lattitude, longitude, address, created_on];
-// 				connection.query(sql, value, function (err, result) {
-// 					if (err) {
-// 						responses.sendError(res);
-// 						return;
-// 					} else {
-// 						var response = {
-// 			                status: constants.responseFlags.ACTION_COMPLETE,
-// 			                flag: 1,
-// 			                response: "Address created successfully.",
-// 			                message: "Address created successfully."
-// 			            };
-// 			            res.send(JSON.stringify(response)); 
-// 					}
-// 				});
-// 	        }
-// 	    });
-// 	}
-// }
+    					var bill_sql = "SELECT * FROM `delivery` WHERE `delivered_by_id`=?";
+	        			connection.query(bill_sql, [user_id], function(err, billResult){
+	        				if (err){
+	        					responses.sendError(res);
+	        					return;
+	        				} else {
+	        					var order_cost = 0;
+	        					var delivered_amount = 0;
+	        					for (var i = 0; i < billResult.length; i++) {
+	        						order_cost = order_cost + billResult[i].order_cost;
+	        						delivered_amount = delivered_amount + billResult[i].delivered_amount;
+	        					}
+	        					var total_bill_paid = order_cost + delivered_amount;
 
-// exports.get_user_address = function(req, res) {
-// 	var access_token = req.body.access_token;
-// 	var manvalues = [access_token];
-// 	var checkblank = commonFunc.checkBlank(manvalues);
-// 	if (checkblank == 1) {
-// 		responses.parameterMissingResponse(res);
-// 		return;
-// 	} else {
-// 		utils.authenticateUser(access_token, function(result) {
-// 	        if (result == 0) {
-// 	             var response = {
-// 					status: constants.responseFlags.INVALID_ACCESS_TOKEN,
-// 					flag: 1,
-// 					response: {},
-// 					message: "Invalid access token."	
-// 				};
-// 				res.send(JSON.stringify(response));
-// 				return;
-// 	        } else {
-// 	        }
-// 	    });
-// 	}
-// }
+	        					var user_rating_sql = "SELECT * FROM `user_rating` WHERE `user_rating_to_id`=?";
+			        			connection.query(bill_sql, [user_id], function(err, userRatingResult){
+			        				if (err){
+			        					responses.sendError(res);
+			        					return;
+			        				} else {
+			        					var user_rating_text = 0;
+			        					for (var i = 0; i < userRatingResult.length; i++) {
+			        						user_rating_text = user_rating_text + userRatingResult[i].rating_count;
+			        					}
+			        					var user_rating_length = userRatingResult.length;
+			        					var user_rating_count  = user_rating_text / user_rating_length;
+
+			        					result[0]["password"] = "";
+					        			var response = {
+					        				flag: 1,
+					        				response: {
+					        					"user_details": result[0],
+					        					"account_balance": result[0].account_balance,
+					        					"rating": user_rating_count,
+					        					"delivery_revenue": total_revenue,
+					        					"bill_paid": total_bill_paid,
+					        					"order_count": order_count,
+					        					"rating_count": user_rating_length
+					        				},
+					        				message: "Successfully data fetched"
+					        			}
+					        			res.status(constants.responseFlags.ACTION_COMPLETE).json(response);
+			        				}
+			        			});
+	        				}
+	        			});
+    				}
+    			});
+    		}
+    	});
+	}
+}
 
 exports.send_notification = function(req, res) {
 	var FCM = require('fcm-node');
@@ -739,4 +792,341 @@ exports.send_notification = function(req, res) {
             console.log("Successfully sent with response: ", response);
         }
     });
+}
+
+exports.report_user = function(req, res) {
+	console.log(req.files.length);
+	var access_token = req.body.access_token;
+	var report_to_id = req.body.report_to_id;
+	var report_type = req.body.report_type;
+	var report_description = req.body.report_description;
+
+	var manvalues = [access_token];
+	var checkblank = commonFunc.checkBlank(manvalues);
+	if (checkblank == 1) {
+		responses.parameterMissingResponse(res);
+		return;
+	} else {
+		utils.authenticateUser(access_token, function(result) {
+	        if (result == 0) {
+	             var response = {
+					flag: 1,
+					response: {},
+					message: "Invalid access token."	
+				};
+				res.status(constants.responseFlags.INVALID_ACCESS_TOKEN).json(response);
+				return;
+	        } else {
+	        	var report_by_id = result[0].user_id;
+
+	        	var report_unique_id = utils.generateRandomString();
+                var report_id = md5(report_unique_id);
+                var currentTime = new Date();
+                var created_on = Math.round(currentTime.getTime() / 1000);
+
+                var sql = "INSERT INTO `report`(`report_id`, `report_by_id`, `report_to_id`, `report_type`, `report_description`, `created_on`) VALUES (?,?,?,?,?,?)";
+                var value = [report_id, report_by_id, report_to_id, report_type, report_description, created_on];
+                connection.query(sql, value, function (err, result) {
+                    if (err) {
+                        responses.sendError(res);
+                        return;
+                    } else {
+
+                    	var file = req.files;
+                    	for (var i = 0; i < file.length; i++) {
+                    		var report_gallery_unique_id = utils.generateRandomString();
+			                var report_gallery_id = md5(report_gallery_unique_id);
+			                var currentTime = new Date();
+			                var created_on = Math.round(currentTime.getTime() / 1000);
+
+			                if ( file[i] != undefined ) {
+			                	var file_image = file[i].filename;
+			                } else {
+			                	var file_image = "";
+			                }
+
+	                    	var sql = "INSERT INTO `report_gallery`(`report_gallery_id`, `report_id`, `report_image_url`, `created_on`) VALUES (?,?,?,?)";
+			                var value = [report_gallery_id, report_id, file_image, created_on];
+			                connection.query(sql, value, function (err, galleryResult) {
+			                	console.log(err);
+			                    if (err) {
+			                        responses.sendError(res);
+			                        return;
+			                    } else {
+			                    }
+			                });	
+                    	}
+                    	var response = {
+                    		flag: 1,
+                    		response: {},
+                    		message: "Successfully report user."
+                    	}
+                    	res.status(constants.responseFlags.ACTION_COMPLETE).json(response);
+                    }
+                });
+	        }
+	    });
+	}
+}
+
+exports.delivered = function(req, res) {
+	
+	var access_token = req.body.access_token;
+	var delivered_to_id = req.body.	delivered_to_id;
+	var delivered_type = req.body.delivered_type;
+	var order_id = req.body.order_id;
+	var delivered_amount = req.body.delivered_amount;
+	var order_cost = req.body.order_cost;
+
+	var manvalues = [access_token];
+	var checkblank = commonFunc.checkBlank(manvalues);
+	if (checkblank == 1) {
+		responses.parameterMissingResponse(res);
+		return;
+	} else {
+		utils.authenticateUser(access_token, function(result) {
+	        if (result == 0) {
+	             var response = {
+					flag: 1,
+					response: {},
+					message: "Invalid access token."	
+				};
+				res.status(constants.responseFlags.INVALID_ACCESS_TOKEN).json(response);
+				return;
+	        } else {
+
+	        	var order_check = "SELECT * FROM `order_details` WHERE `order_id`=?";
+	        	connection.query(order_check, [order_id], function(err, billCheckResult){
+	        		if (err) {
+	        			responses.sendError(res);
+	        			return;
+	        		} else {
+	        			if ( billCheckResult[0].is_bill == 1 ) {
+
+	        				var delivered_by_id = result[0].user_id;
+				        	var delivered_unique_id = utils.generateRandomString();
+			                var delivered_id = md5(delivered_unique_id);
+			                var currentTime = new Date();
+			                var created_on = Math.round(currentTime.getTime() / 1000);
+
+			                var sql = "INSERT INTO `delivery`(`delivered_id`, `delivered_by_id`, `delivered_to_id`, `delivered_type`, `delivered_amount`, `order_cost`, `created_on`) VALUES (?,?,?,?,?,?,?)";
+			                var value = [delivered_id, delivered_by_id, delivered_to_id, delivered_type, delivered_amount, order_cost, created_on];
+			                connection.query(sql, value, function (err, result) {
+			                	console.log(err);
+			                    if (err) {
+			                        responses.sendError(res);
+			                        return;
+			                    } else {
+			                    	var sql = "UPDATE `order_details` SET `status`='3' WHERE `order_id`=?";
+			                        connection.query(sql, [order_id], function(err, result) {
+			                            console.log(err);
+			                            if (err) {
+			                                responses.sendError(res);
+			                                return;
+			                            } else {
+			                            	var user_sql = "SELECT * FROM `user` WHERE `user_id`=?";
+			                            	connection.query(user_sql, [user_id], function(err, userResult){
+			                            		if (err) {
+			                            			responses.sendError(res);
+			                            			return;
+			                            		} else {
+				                            		var account_balance = (delivered_amount * 20 ) / 100;
+				                            		var total_account_balance = account_balance + userResult[0].account_balance;
+					                            	var sql = "UPDATE `user` SET `account_balance`='"+total_account_balance+"' WHERE `user_id`=?";
+							                        connection.query(sql, [user_id], function(err, result) {
+							                            console.log(err);
+							                            if (err) {
+							                                responses.sendError(res);
+							                                return;
+							                            } else {
+
+							                            	var notification_unique_id = utils.generateRandomString();
+							                                var notification_id = md5(notification_unique_id);
+							                                var currentTime = new Date();
+							                                var created_on = Math.round(currentTime.getTime() / 1000);
+							                                var notification_type = "4";
+							                                var notification_text = "Your order is completed";
+							                                
+							                                var sql = "INSERT INTO `notification`(`notification_id`,`sender_id`, `receiver_id`, `notification_type`, `notification_text`, `notification_type_id`, `created_on`) VALUES (?,?,?,?,?,?,?)";
+							                                var value = [notification_id, delivered_by_id, delivered_to_id, notification_type, notification_text , order_id, created_on];
+							                                connection.query(sql, value, function (err, result) {
+							                                    console.log(err);
+							                                    if (err) {
+							                                        responses.sendError(res);
+							                                        return;
+							                                    } else {
+							                                        var serverKey = config.get('serverFCMKey'); //put your server key here 
+							                                        console.log(userResult[0].device_token);
+							                                        var fcm = new FCM(serverKey);
+							                                     
+							                                        var message = { //this may vary according to the message type (single recipient, multicast, topic, et cetera) 
+							                                            to: userResult[0].device_token, 
+							                                            collapse_key: 'otlbni',
+							                                            notification: {
+							                                                title: 'OTLBNI', 
+							                                                body:  notification_text
+							                                            },
+							                                            data: {
+							                                                notification_type: notification_type,
+							                                                notification_type_id: order_id,
+							                                                access_token: access_token
+							                                            }
+							                                        };
+							                                        
+							                                        fcm.send(message, function(err, response){
+							                                            if (err) {
+							                                                // return callback(0);
+							                                                console.log(err);
+							                                            } else {
+							                                                // return callback(1);
+							                                                console.log("jhj"+response);
+							                                            }
+							                                        });
+
+							                                        var response = {
+											                    		flag: 1,
+											                    		response: {},
+											                    		message: "Successfully delivered."
+											                    	}
+											                    	res.status(constants.responseFlags.ACTION_COMPLETE).json(response);
+							                                    }
+							                                });
+							                            }
+							                        });
+							                    }
+			                            	});
+					                    }
+					                });
+			                    }
+			                });
+	        			} else {
+	        				var response = {
+	        					flag: 6,
+	        					response: {},
+	        					message: "Please create bill first"
+	        				}
+	        				res.status(constants.responseFlags.ACTION_COMPLETE).json(response);
+	        			}
+	        		}
+	        	});
+	        }
+	    });
+	}
+}
+
+exports.user_feedback = function(req, res) {
+	var access_token = req.body.access_token;
+	var rating_to_id = req.body.rating_to_id;
+	var rating_count = req.body.rating_count;
+	var rating_comment = req.body.rating_comment;
+
+	var manvalues = [access_token, rating_to_id, rating_count, rating_comment];
+	var checkblank = commonFunc.checkBlank(manvalues);
+	if (checkblank == 1) {
+		responses.parameterMissingResponse(res);
+		return;
+	} else {
+		utils.authenticateUser(access_token, function(result) {
+	        if (result == 0) {
+	             var response = {
+					flag: 1,
+					response: {},
+					message: "Invalid access token."	
+				};
+				res.status(constants.responseFlags.INVALID_ACCESS_TOKEN).json(response);
+				return;
+	        } else {
+	        	var rating_by_id = result[0].user_id;
+
+	        	var rating_unique_id = utils.generateRandomString();
+                var rating_id = md5(rating_unique_id);
+                var currentTime = new Date();
+                var created_on = Math.round(currentTime.getTime() / 1000);
+
+                var sql = "INSERT INTO `user_rating`(`rating_id`, `user_rating_by_id`, `user_rating_to_id`, `rating_count`, `rating_comment`, `created_on`) VALUES (?,?,?,?,?,?)";
+                var value = [rating_id, rating_by_id, rating_to_id, rating_count, rating_comment, created_on];
+                connection.query(sql, value, function (err, result) {
+                	console.log(err);
+                    if (err) {
+                        responses.sendError(res);
+                        return;
+                    } else {
+                    	var response = {
+                    		flag: 1,
+                    		response: {},
+                    		message: "Successfully send facebook."
+                    	}
+                    	res.status(constants.responseFlags.ACTION_COMPLETE).json(response);
+                    }
+                });
+	        }
+	    });
+	}
+}
+
+exports.create_bill = function(req, res) {
+	var access_token = req.body.access_token;
+	var order_cost = req.body.order_cost;
+	var order_id = req.body.order_id;
+
+	var manvalues = [access_token, order_cost, order_id];
+	var checkblank = commonFunc.checkBlank(manvalues);
+	if (checkblank == 1) {
+		responses.parameterMissingResponse(res);
+		return;
+	} else {
+		utils.authenticateUser(access_token, function(result) {
+	        if (result == 0) {
+	            var response = {
+					flag: 1,
+					response: {},
+					message: "Invalid access token."	
+				};
+				res.status(constants.responseFlags.INVALID_ACCESS_TOKEN).json(response);
+				return;
+	        } else {
+	        	var user_id = result[0].user_id;
+	        	var update_cost = "UPDATE `order_details` SET `order_cost`= '"+order_cost+"', `is_bill`='1' WHERE `order_id`=?";
+				connection.query(update_cost, [order_id], function(err, result){
+					if (err) {
+						console.log(err);
+					} else {
+						var response = {
+							flag: 1,
+							response: {},
+							message: "Bill created successfully."	
+						};
+						res.status(constants.responseFlags.ACTION_COMPLETE).json(response);
+					}
+				});
+	        }
+	    });
+	}
+}
+
+exports.user_feedback_list = function(req, res) {
+	var user_id = req.body.user_id;
+
+	var manvalues = [user_id];
+	var checkblank = commonFunc.checkBlank(manvalues);
+	if (checkblank == 1) {
+		responses.parameterMissingResponse(res);
+		return;
+	} else {
+  		var rating_sql = "SELECT * FROM `user_rating` WHERE `user_rating_to_id`=?"
+		connection.query(sql, [user_id], function (err, result) {
+        	console.log(err);
+            if (err) {
+                responses.sendError(res);
+                return;
+            } else {
+            	var response = {
+            		flag: 1,
+            		response: result,
+            		message: "Successfully data fetched."
+            	}
+            	res.status(constants.responseFlags.ACTION_COMPLETE).json(response);
+            }
+        });
+	}
 }

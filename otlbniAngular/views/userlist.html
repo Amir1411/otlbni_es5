@@ -33,30 +33,31 @@
 				<div class="col-xs-12">
 					<div class="card">
 						<div class="card-body">
-							<table id="demo-datatables-5" class="table table-striped table-bordered table-nowrap dataTable no-footer" cellspacing="0" width="100%" role="grid" style="width: 100%;">
+							<table id="demo-datatables-5" class="table table-responsive table-striped table-nowrap" cellspacing="0" width="100%" role="grid" style="width: 100%;">
 								<thead>
 									<tr>
-										<th class="text-left">ID</th>
-										<th class="text-left">Name</th>
-										<th class="text-left">Profile pic</th>
-										<th class="text-left">Email</th>
-										<th></th>
+										<th class="text-center">ID</th>
+										<th class="text-center">Name</th>
+										<th class="text-center">Profile pic</th>
+										<th class="text-center">Email</th>
+										<th class="text-center">Action</th>
 									</tr>
 								</thead>
 								<tbody>
 									<tr ng-repeat="(key,list) in userlist">
-										<td class="text-left">{{list.number}}</td>
-										<td class="text-left">{{list.user_name}}</td>
+										<td class="text-center">{{list.number}}</td>
+										<td class="text-center">{{list.user_name}}</td>
 										<td class="text-center">
-											<img class="userDpImg" ng-src="{{list.profile_url}}" alt="State Flag">
+											<!-- <img class="" ng-src="{{list.profile_url}}" alt="State Flag" width="60px" height="60px"> -->
+											<div class="" style="background: url({{list.profile_url}});height: 30px;background-size: cover;background-position: center;background-repeat: no-repeat;width: 30px;margin: auto;">
 										</td>
-										<td class="text-left">{{list.user_email}}</td>
-										<td class="text-center" >
-											<button class="btn btn-danger btn-sm btn-labeled" type="button" ng-hide="list.is_blocked" ng-click="blockunblockuser_popup(1,list.user_id, key)">
-												<span class="btn-label"><span class="icon icon-bank icon-lg icon-fw"></span></span>Block
+										<td class="text-center">{{list.user_email}}</td>
+										<td class="text-center">
+											<button class="btn btn-primary btn-sm" type="button" ng-hide="list.is_blocked" ng-click="blockunblockuser_popup(1,list.user_id, key)">
+												Block
 											</button>
-											<button class="btn btn-success btn-sm btn-labeled" type="button" ng-show="list.is_blocked" ng-click="blockunblockuser_popup(0,list.user_id, key)">
-												<span class="btn-label"><span class="icon icon-check icon-lg icon-fw"></span></span>Un-Block
+											<button class="btn btn-success btn-sm" type="button" ng-show="list.is_blocked" ng-click="blockunblockuser_popup(0,list.user_id, key)">
+												Un-Block
 											</button>
 										</td>
 									</tr>

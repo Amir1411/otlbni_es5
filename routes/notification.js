@@ -53,7 +53,7 @@ exports.get_user_notification_list = function(req, res) {
 				return;
 	        } else {
 	        	var user_id = result[0].user_id;
-	        	var sql = "SELECT * FROM `notification` where `reciever_id`=?";
+	        	var sql = "SELECT * FROM `notification` where `receiver_id`=?";
 	        	connection.query(sql, [user_id], function(err, result) {
 	        		if ( err ) {
 	        			responses.sendError(res);

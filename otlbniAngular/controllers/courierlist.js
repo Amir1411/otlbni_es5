@@ -15,7 +15,11 @@ app.controller("courierlist", ['$scope','httpService','API_URL','$window','$root
 				var responseData = response.response;
 				for (var i = 0; i < responseData.length; i++) {
 					responseData[i].number = i+1;
-					responseData[i].profile_url = API_URL+'/'+responseData[i].profile_url;
+					if ( responseData[i].profile_url != '' ) {
+						responseData[i].profile_url = API_URL+'/'+responseData[i].profile_url;
+					} else {
+						responseData[i].profile_url = API_URL+'/assets/user_placeholder.jpeg';
+					}
 				}
 				$scope.userlist = responseData;
 				angular.element(document).ready( function () {
@@ -34,19 +38,6 @@ app.controller("courierlist", ['$scope','httpService','API_URL','$window','$root
 						},
 						"aoColumnDefs": [
 							{ 'bSortable': false, 'aTargets': [3] }
-						],
-						 dom: "<'row'<'col-sm-6'l><'col-sm-6'f>><'table-responsive'tr><'row'<'col-sm-12'p>>",
-						language: {
-							paginate: {
-								previous: "&laquo;",
-								next: "&raquo;"
-							},
-							search: "_INPUT_",
-							searchPlaceholder: "Search…"
-						},
-						pagingType: "full_numbers",
-						order: [
-							[2, "desc"]
 						]
 					});
 				});

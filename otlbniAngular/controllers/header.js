@@ -19,6 +19,11 @@ app.controller("header", ['$scope','httpService','API_URL','$window','$rootScope
 		}
 	}
 
+	$scope.sidebarResToggle = function() {
+		 document.getElementById('resSidebar-toggler').classList.toggle('collapsed');
+		 document.getElementById('resSide-nav').classList.toggle('in');
+	}
+
 	$scope.logout = function() {
         localStorage.setItem('user', null);
         $scope.user_logged_in = false;

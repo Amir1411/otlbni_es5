@@ -5,7 +5,7 @@
 		<div class="modal-dialog modal-md">
 			<div class="modal-content">
 				<div class="modal-header bg-success">
-					<h4 class="modal-title">Add Category</h4>
+					<h4 class="modal-title">Add Sub Category</h4>
 				</div>
 				<div class="modal-body">
 					<div class="panel-body">
@@ -24,20 +24,20 @@
 							</div>
 	                        <div class="form-group">  
 	                            <label for="email-2" class=" control-label">Name</label>
-	                            <input id="" class="form-control" type="text" ng-model="category_name">  
-	                        	<span class="error" ng-show="category_name_error">*{{category_name_msg}}</span>
+	                            <input id="" class="form-control" type="text" ng-model="sub_category_name">  
+	                        	<span class="error" ng-show="sub_category_name_error">*{{sub_category_name_msg}}</span>
 	                        </div>
 	                        <!-- <div class="form-group">
 	                            <label for="email-2" class=" control-label">Sort Order</label>
-	                            <input id="" class="form-control" type="text" ng-model="category_sort_order">
-	                        	<span class="error" ng-show="category_sort_order_error">*{{categoryr_sort_order_msg}}</span>
+	                            <input id="" class="form-control" type="text" ng-model="sub_category_sort_order">
+	                        	<span class="error" ng-show="sub_category_sort_order_error">*{{categoryr_sort_order_msg}}</span>
 	                        </div> -->
 	                        <div class="form-group">
 	                            <label for="address" class=" control-label">Description</label>
-	                            <textarea id="" class="form-control" rows="5" ng-model="category_description"></textarea>
+	                            <textarea id="" class="form-control" rows="5" ng-model="sub_category_description"></textarea>
 	                        </div>
 	                        <div class="form-group">
-	                            <button class="btn btn-primary" type="submit" ng-click="add_category()">Save</button>
+	                            <button class="btn btn-primary" type="submit" ng-click="add_sub_category()">Save</button>
 	                        </div>
 	                    </form>
 	                </div>
@@ -52,7 +52,7 @@
 		<div class="modal-dialog modal-md">
 			<div class="modal-content">
 				<div class="modal-header bg-success">
-					<h4 class="modal-title">Edit Category</h4>
+					<h4 class="modal-title">Edit Sub Category</h4>
 				</div>
 				<div class="modal-body">
 					<div class="panel-body">
@@ -71,16 +71,16 @@
 							</div>
 	                        <div class="form-group">  
 	                            <label for="email-2" class=" control-label">Name</label>
-	                            <input id="" class="form-control" type="text" ng-model="edit_category_name">  
-	                        	<span class="error" ng-show="edit_category_name_error">*{{edit_category_name_msg}}</span>
+	                            <input id="" class="form-control" type="text" ng-model="edit_sub_category_name">  
+	                        	<span class="error" ng-show="edit_sub_category_name_error">*{{edit_sub_category_name_msg}}</span>
 	                        </div>
 	                        <div class="form-group">
 	                            <label for="address" class=" control-label">Description</label>
-	                            <textarea id="" class="form-control" rows="5" ng-model="edit_category_description"></textarea>
+	                            <textarea id="" class="form-control" rows="5" ng-model="edit_sub_category_description"></textarea>
 	                            <input type="hidden" ng-model="edit_category_id" />
 	                        </div>
 	                        <div class="form-group">
-	                            <button class="btn btn-primary" type="submit" ng-click="update_category()">Save</button>
+	                            <button class="btn btn-primary" type="submit" ng-click="update_sub_category()">Save</button>
 	                        </div>
 	                    </form>
 	                </div>
@@ -117,14 +117,14 @@
 			<div class="title-bar clearfix">
 				<div class="col-xs-6 col-md-6">
 					<h1 class="title-bar-title">
-						<span class="d-ib">Category</span>
+						<span class="d-ib">Sub Category</span>
 					</h1>
 				</div>
 				<div class="col-xs-6 col-md-6">
 					<div class="pull-right">
 						<div class="form-group text-right">
 							<label for="">&nbsp;&nbsp;</label>
-							<button class="btn btn-primary m-r-sm" type="button" data-toggle="modal" data-target="#addCategoryPopup">Add Category</button>
+							<button class="btn btn-primary m-r-sm" type="button" data-toggle="modal" data-target="#addCategoryPopup">Add Sub Category</button>
 						</div>
 					</div>
 				</div>
@@ -132,7 +132,7 @@
 			<div class="row gutter-xs">	
 				<div class="card">
 					<div class="card-body">
-						<table id="category" class="table table-striped" cellspacing="0" width="100%" role="grid" style="width: 100%;">
+						<table id="subcategory" class="table table-striped" cellspacing="0" width="100%" role="grid" style="width: 100%;">
 					        <thead>
 					            <tr>
 					                <th class="text-center">Sr. No.</th>
@@ -144,10 +144,10 @@
 					            </tr>
 					        </thead>
 					        <tbody>
-					           <tr ng-repeat="(key,list) in categoryList">
+					           <tr ng-repeat="(key,list) in subcategoryList">
 									<td class="text-center">{{list.number}}</td>
-									<td class="text-center">{{list.category_name}}</td>
-									<td class="text-center">{{list.category_description}}</td>
+									<td class="text-center">{{list.sub_category_name}}</td>
+									<td class="text-center">{{list.sub_category_description}}</td>
 									<!-- <td class="text-center">{{list.sort_order}}</td> -->
 									<td class="text-center">
 										<!-- <div ng-class="list.is_active == 1? 'status active': 'status offline'">Active</div> -->
@@ -155,23 +155,23 @@
 										<div class="status offline" ng-hide="list.is_active">Offline</div>
 									</td>
 									<td class="text-center" >
-										<a class="btn btn-sm btn-test-link" href="" title="Edit" ng-click="editCategory(key,list.category_id)">
+										<a class="btn btn-sm btn-test-link" href="" title="Edit" ng-click="editSubCategory(key,list.sub_category_id)">
 					                		<i class="fa fa-pencil icon-css pencil-icon"></i>
 					                	</a>
 					                	<span ng-show="list.is_active">
-					                		<a class="btn btn-sm btn-test-link" title="active" ng-click="activeOfflineCategory(key,list.category_id,0)">
+					                		<a class="btn btn-sm btn-test-link" title="active" ng-click="activeOfflineSubCategory(key,list.sub_category_id,0)">
 					                			<i class="fa fa-unlock unblock-icon"></i>
 					                		</a>
 					                	</span>
 					                	<span ng-hide="list.is_active">
-					                		<a class="btn btn-sm btn-test-link" title="offline" ng-click="activeOfflineCategory(key,list.category_id,1)">
+					                		<a class="btn btn-sm btn-test-link" title="offline" ng-click="activeOfflineSubCategory(key,list.sub_category_id,1)">
 					                			<i class="fa fa-lock block-icon"></i>
 					                		</a>
 					                	</span>
 					                	</span>
-					                	<a class="btn btn-sm btn-test-link" title="view category" href="/#!/ecommerce/subcategory/{{list.category_id}}/{{list.master_category_id}}">
+					                	<!-- <a class="btn btn-sm btn-test-link" title="view category" href="/#!/ecommerce/subcategory/{{list.category_id}}">
 					                		<i class="fa fa-asterisk block-icon"></i>
-					                	</a>
+					                	</a> -->
 									</td>
 								</tr>
 					        </tbody>

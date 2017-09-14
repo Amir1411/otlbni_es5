@@ -54,8 +54,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 .error {display: block;margin-top: 5px;margin-bottom: 10px;color: #e74c3c;}
 
  .navbar-default .navbar-header, .navbar-collapse {
-       background-color: #d9230f;
-    border-color: #d9230f;
+      /* background-color: #d9230f;
+    border-color: #d9230f;*/
 }
 .layout-sidebar-backdrop {
     background-color: #222; 
@@ -117,7 +117,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 .status {
     color: #fff;
     text-align: center;
-        margin: 0px 45px;
+    width: 40%;
+        margin: auto;
     padding: 2px 0px;
 }
 .status.active {
@@ -129,3 +130,40 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 .dataTables_empty {
     text-align: center;
 }
+#demo-datatables-5_paginate {text-align: right;}
+.mdl-button {min-width: 40px;}
+
+.card {border: 1px solid #dbe3ec;}
+.card-wrap {color: #fff;padding: 10px 10px 0px;} 
+.card-visitors {background: #0288d1;}
+.card-new-visitors {background: #3b3b3b;}
+.card-pageview {background: #f4bd00;}
+.card-duration {background: #f1453d;}
+
+.navbar-default .sidenav-toggler .bar-line.in {background: #2c3e50;}
+.navbar-default .navbar-account-btn, .navbar-default .navbar-account-btn:hover {color: #555 !important;}
+.dataTables_filter>label:after {right: 0;left: auto;background: #008cff;color: #fff;width: 40px;height: 40px;line-height: 40px;font-size: 15px;}
+.dataTables_filter>label>input {padding-right: 30px;padding-left: 5px;margin-right: 0.5em;width: 250px !important;height: 40px;}
+.dataTables_length>label>select {
+    display: inline-block;
+    width: 50px;
+    padding: 3px;
+    height: 40px;
+    margin-right: 10px;
+    border-radius: 4px;
+    background: #f2f5f8;
+}
+h1 {font-weight: 400;}
+
+table.dataTable thead .sorting:before, table.dataTable thead .sorting_asc:before, table.dataTable thead .sorting_desc:before, table.dataTable thead .sorting_asc_disabled:before, table.dataTable thead .sorting_desc_disabled:before {display: none;}
+.mdl-button--raised.mdl-button--colored {
+    background: #008cfe;
+}
+
+.btn-test-link {
+    box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.04), 0 3px 1px -2px rgba(0,0,0,.2), 0 1px 5px 0 rgba(0,0,0,.12);
+    border-radius: 2px;
+        background: #f7f7f7;
+    margin: 0px 2px;
+}
+.btn-test-link:hover {color: #000;}

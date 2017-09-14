@@ -44,6 +44,10 @@ app.config(["$routeProvider", function ($routeProvider) {
         templateUrl: "views/ecommerce/category.html",
         controller: "category"
     })
+    .when("/ecommerce/subcategory/:id/:idd", {
+        templateUrl: "views/ecommerce/sub_category.html",
+        controller: "sub_category"
+    })
     .when("/reset", {
         templateUrl: "views/reset.html",
         controller: "reset"

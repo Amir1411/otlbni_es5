@@ -31,6 +31,8 @@ var places_panel = require('./routes/places');
 var order_panel = require('./routes/order');
 var notification = require('./routes/notification');
 var ecommerce_panel = require('./routes/ecommerce/add_category');
+var ecommerce_panel_brand = require('./routes/ecommerce/brand');
+var user_message = require('./routes/message');
 
 console.log(user_panel);
 if (process.env.NODE_ENV != 'localhost') {
@@ -67,6 +69,18 @@ var storageAdmin = multer.diskStorage({
     }
 });
 
+var storageAdminBrand = multer.diskStorage({
+    destination: function(req, file, callback) {
+        // console.log(file);
+        callback(null, './uploads/admin/brand');
+    },
+    filename: function(req, file, callback) {
+        // console.log(file);
+        var fileUniqueName = md5(Date.now());
+        callback(null,  fileUniqueName + path.extname(file.originalname));
+    }
+});
+
 var storageOrder = multer.diskStorage({
     destination: function(req, file, callback) {
         // console.log(file);
@@ -79,9 +93,23 @@ var storageOrder = multer.diskStorage({
     }
 });
 
+var storageReport = multer.diskStorage({
+    destination: function(req, file, callback) {
+        // console.log(file);
+        callback(null, './uploads/report');
+    },
+    filename: function(req, file, callback) {
+        // console.log(file);
+        var fileUniqueName = md5(Date.now());
+        callback(null,  fileUniqueName + path.extname(file.originalname));
+    }
+});
+
 var upload = multer({ storage: storage });
 var uploadOrder = multer({ storage: storageOrder });
 var uploadAdmin = multer({ storage: storageAdmin });
+var uploadAdminBrand = multer({ storage: storageAdminBrand });
+var uploadReport = multer({ storage: storageReport });
 
 // all environments=
 app.use(express.static(path.join(__dirname, 'uploads')));
@@ -148,6 +176,12 @@ app.post('/reset_password', user_panel.reset_password);
 app.post('/edit_profile', upload.single('profile_url'), user_panel.edit_profile);
 app.post('/get_user_details', user_panel.get_user_details);
 app.post('/send_notification', user_panel.send_notification);
+app.post('/report_user', uploadReport.array('report_images', 5), user_panel.report_user);
+app.post('/delivered', user_panel.delivered);
+app.post('/user_feedback', user_panel.user_feedback);
+app.post('/user_feedback_list', user_panel.user_feedback_list);
+app.post('/create_bill', user_panel.create_bill);
+app.post('/get_other_user_details', user_panel.get_other_user_details);
 
 //.......................PLACES PANEL API's.............................
 
@@ -163,11 +197,21 @@ app.post('/create_order', uploadOrder.single('order_image'), order_panel.create_
 app.post('/pending_order', order_panel.pending_order);
 app.post('/my_order', order_panel.my_order);
 app.post('/cancel_order', order_panel.cancel_order);
-app.post('/getCreateOrderDetails', order_panel.getCreateOrderDetails);
+
+app.post('/getNotificationDetails', order_panel.getNotificationDetails);
+app.post('/create_offer', order_panel.create_offer);
+app.post('/accept_reject_offer', order_panel.accept_reject_offer);
 
 //.......................NOTIFICATION PANEL API's.............................
 
 app.post('/get_user_notification_list', notification.get_user_notification_list);
+
+// ....................... Send Message API ..........................
+
+app.post('/send_message', user_message.send_message);
+app.post('/get_message', user_message.get_message);
+
+// ....................... Admin Panel API ..........................
 
 app.post('/admin_login', admin_panel.login);
 app.post('/forgot_password', admin_panel.forgot_password);
@@ -184,7 +228,28 @@ app.post('/check_verification_token', admin_panel.check_verification_token);
 // ....................... Ecommerce Admin Panel API ..........................
 
 app.post('/add_master_category', ecommerce_panel.add_master_category);
+app.post('/update_master_category', ecommerce_panel.update_master_category);
 app.post('/get_master_category_details', ecommerce_panel.get_master_category_details);
+app.post('/get_master_category_list_details', ecommerce_panel.get_master_category_list_details);
+app.post('/active_offline_master_category', ecommerce_panel.active_offline_master_category);
+
+app.post('/add_category', ecommerce_panel.add_category);
+app.post('/update_category', ecommerce_panel.update_category);
+app.post('/get_category_details', ecommerce_panel.get_category_details);
+app.post('/get_category_list_details', ecommerce_panel.get_category_list_details);
+app.post('/active_offline_category', ecommerce_panel.active_offline_category);
+
+app.post('/add_sub_category', ecommerce_panel.add_sub_category);
+app.post('/update_sub_category', ecommerce_panel.update_sub_category);
+app.post('/get_sub_category_details', ecommerce_panel.get_sub_category_details);
+app.post('/get_sub_category_list_details', ecommerce_panel.get_sub_category_list_details);
+app.post('/active_offline_sub_category', ecommerce_panel.active_offline_sub_category);
+
+app.post('/get_brand_list', ecommerce_panel_brand.get_brand_list);
+app.post('/get_brand_details', ecommerce_panel_brand.get_brand_details);
+app.post('/active_inactive_brand', ecommerce_panel_brand.active_inactive_brand);
+app.post('/update_brand', ecommerce_panel_brand.update_brand);
+app.post('/add_brand', uploadAdminBrand.single('brand_image'), ecommerce_panel_brand.add_brand);
 
 // app.post('/my_order', order_panel.my_order);
 

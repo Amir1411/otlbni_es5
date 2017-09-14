@@ -10,10 +10,15 @@ app.controller('ecom_category', ['$scope','httpService','API_URL','$window','$ro
 	$scope.success_msg = false;
 	$scope.error_msg = false;
 
+	$scope.edit_master_category_name_error = false;
+	$scope.edit_master_sort_order_error = false;
+	$scope.edit_success_msg = false;
+	$scope.edit_error_msg = false;
+
 	$scope.init = function() {
 		params = {access_token: access_token};
 		console.log(params);
-		httpService.post( API_URL + '/get_master_category_details', params).then(function(response){
+		httpService.post( API_URL + '/get_master_category_list_details', params).then(function(response){
 			var response = response.response.data;
 			console.log(response);
 			if(response.status == 200){
@@ -106,7 +111,7 @@ app.controller('ecom_category', ['$scope','httpService','API_URL','$window','$ro
 						$scope.success_msg = false;
 						// $scope.init(); 
 						$window.location.reload();
-					}, 10000); 
+					}, 3000); 
 
 				} else if ( response.status == 422 ) {
 					$scope.error_msg = true;
@@ -120,6 +125,110 @@ app.controller('ecom_category', ['$scope','httpService','API_URL','$window','$ro
 					$scope.master_category_name = ''; 
 					$scope.master_sort_order = '';
 					$scope.master_category_description = '';
+				}
+			});
+		}
+	}
+
+	$scope.activeOfflineMasterCategory = function(key, master_category_id, value) {
+		params = {access_token: access_token, is_active: value, master_category_id: master_category_id};
+		httpService.post( API_URL + '/active_offline_master_category', params).then(function(response){
+			var response = response.response.data;
+			// console.log(response);
+			if(response.status == 200){
+				// if (response.response.is_blocked == 1 ) {
+				// 	$scope.successText = "User Blocked Successfully.";
+				// } else if ( response.response.is_blocked == 0 ) {
+				// 	$scope.successText = "User Unblocked Successfully.";
+				// }
+				console.log(response.message);
+				$scope.successText = response.message;
+			
+				$scope.masterCategoryList[key].is_active = value;
+				$('#successPopup').modal('show');
+			}
+		});
+	}
+
+	$scope.editMasterCategory = function(key, master_category_id) {
+		params = {access_token: access_token, master_category_id: master_category_id};
+		httpService.post( API_URL + '/get_master_category_details', params).then(function(response){
+			var response = response.response.data;
+			console.log(response);
+			if(response.status == 200){
+				var responseData = response.response;
+				$scope.edit_master_category_name = responseData.master_category_name;
+				$scope.edit_master_category_description = responseData.master_category_description;
+				$scope.edit_master_category_id = responseData.master_category_id;
+				$('#editCategoryPopup').modal('show');
+			}
+		}, function myError(response) {
+			alert(response.data.message);
+		});
+	}
+
+	$scope.update_master_category = function() {
+		
+		if ( $scope.edit_master_category_name == '' || $scope.edit_master_category_name == undefined || $scope.edit_master_category_name == null ) {
+			$scope.edit_master_category_name_error = true;
+			$scope.edit_master_category_name_msg = "This field is required."
+		} else {
+			$scope.edit_master_category_name_error = false;
+		}
+
+		// if ( $scope.master_sort_order == '' || $scope.master_sort_order == undefined || $scope.master_sort_order == null ) {
+		// 	$scope.master_sort_order_error = true;
+		// 	$scope.master_sort_order_msg = "This field is required.";
+		// } else {
+		// 	if ( !$scope.master_sort_order.match(numberFormat) ) {
+		// 		$scope.master_sort_order_error = true;
+		// 		$scope.master_sort_order_msg = "This field is only required number."
+		// 	} else {
+		// 		$scope.master_sort_order_error = false;
+		// 	}
+		// }
+
+		if ( $scope.edit_master_category_description == undefined || $scope.edit_master_category_description == null ) {
+			$scope.edit_master_category_description = "";
+		} 
+
+		if ( $scope.edit_master_category_name_error == true ) {
+			return false;
+		} else {
+			var params = {
+				access_token: access_token,
+				edit_master_category_name: $scope.edit_master_category_name,
+				edit_master_category_description: $scope.edit_master_category_description,
+				edit_master_category_id: $scope.edit_master_category_id
+			}
+			httpService.post( API_URL + '/update_master_category', params).then(function(response){
+				var response = response.response.data;
+				console.log(response);
+				if( response.status == 200 ){
+
+					$scope.edit_success_msg = true;
+            		$scope.edit_success_msg_text = response.message;
+            		$scope.edit_master_category_name = '';
+            		$scope.edit_master_category_description = '';
+            		// $scope.init();
+            		setTimeout(function () {
+						$scope.edit_success_msg_text = "";
+						$('#editCategoryPopup').modal("hide");
+						$scope.edit_success_msg = false;
+						// $scope.init(); 
+						$window.location.reload();
+					}, 3000); 
+
+				} else if ( response.status == 422 ) {
+					$scope.edit_error_msg = true;
+					$scope.edit_error_msg_text = response.message;
+					$scope.edit_master_category_name = '';
+					$scope.edit_master_category_description = '';
+				} else {
+					$scope.edit_error_msg = true;
+					$scope.edit_error_msg_text = response.message;
+					$scope.edit_master_category_name = '';
+					$scope.edit_master_category_description = '';
 				}
 			});
 		}
