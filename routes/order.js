@@ -141,6 +141,58 @@ exports.my_order = function(req, res){
     }
 };
 
+exports.my_delivered_order = function(req, res){
+    var access_token = req.body.access_token;
+    var https = require('https');
+    var key = config.get("mapKey");
+
+    var manvalues = [access_token];
+    var checkblank = commonFunc.checkBlank(manvalues);
+    if (checkblank == 1) {
+        responses.parameterMissingResponse(res);
+        return;
+    } else {
+        utils.authenticateUser(access_token, function(result) {
+            if (result == 0) {
+                 var response = {
+                    flag: 1,
+                    response: {},
+                    message: "Invalid access token."    
+                };
+                // res.send(JSON.stringify(response));
+                res.status(constants.responseFlags.INVALID_ACCESS_TOKEN).json(response);
+                return;
+            } else {
+                var user_id = result[0].user_id;
+                var arrayId = [];
+                for (var i = 0; i < result.length; i++) {
+                    var user_id = result[i].user_id;
+                    arrayId.push(user_id);
+                }
+
+                async.parallel(
+                    [  
+                        function(callback) {
+                            get_delivered_offer_details(arrayId,req,res,function(get_delivered_offer_details_result){
+                                callback(null,get_delivered_offer_details_result);
+                            });
+                        }
+                    ], function(err, results) {
+                        console.log(err);
+                        console.log(results);
+                        var response = {
+                            flag: 1,
+                            response: results[0],
+                            message: "Data fetched successfully"
+                        }
+                        res.status(constants.responseFlags.ACTION_COMPLETE).json(response);
+                    }
+                );
+            }
+        });
+    }
+};
+
 function get_myorder_place(resultItem, callback) {
     var key = config.get("mapKey");
     // var place_id = resultItem.place_id;
@@ -196,7 +248,7 @@ function get_myorderinactive_details(user_id, req, res, callback) {
     var ontheway_status = 4;
     var my_order_url = "SELECT * FROM `order_details` WHERE `created_by_id`=? AND `status` NOT IN ("+pending_status+","+accept_status+", "+ontheway_status+")";
     
-    console.log(my_order_url);
+    // console.log(my_order_url);
     connection.query(my_order_url, [user_id], function(err, result) {
         if (err) {
             console.log(err);
@@ -204,6 +256,7 @@ function get_myorderinactive_details(user_id, req, res, callback) {
             return;
         } else if ( result.length > 0 ) {
             var userByArray = [];
+            var offerByArray = [];
             for (var i = 0; i < result.length; i++) {
                 if ( result[i].order_image != "" ) {
                     result[i].order_image = "/order/"+result[i].order_image;
@@ -211,16 +264,20 @@ function get_myorderinactive_details(user_id, req, res, callback) {
                 if ( result[i].created_by_id != "" ) {
                     var created_by_id = result[i].created_by_id;
                     userByArray.push(created_by_id);
+                }
+                if ( result[i].order_by_id != "" ) {
+                    var order_by_id = result[i].order_by_id;
+                    offerByArray.push(order_by_id);
                 } 
             }
 
             get_myorder_place(result, function(placeDetails){
-                console.log(userByArray);
+                // console.log(userByArray);
                 if(userByArray.length > 0){
                     var my_order_url = "SELECT `user_name`, `profile_url` FROM `user` WHERE `user_id` IN(?)";
                     connection.query(my_order_url, [userByArray], function(err, userResult) {
                         if (err) {
-                            console.log(err);
+                            // console.log(err);
                             responses.sendError(res);
                             return;
                         } else {
@@ -229,15 +286,60 @@ function get_myorderinactive_details(user_id, req, res, callback) {
                                     userResult[i].profile_url = "/user/"+userResult[i].profile_url;
                                 }
                             }
-                            
-                            for (var k = 0; k < result.length; k++) {
-                                for (var j = 0; j < userResult.length; j++) {
-                                    for (var l = 0; l < placeDetails.length; l++) {
-                                        if ( result[k].created_by_id == "" ) {
-                                            result[k]["order_by_user_details"] = {};
-                                        } else {
-                                            result[k]["order_by_user_details"] = userResult[j];
+                            if(userByArray.length > 0){  
+                                var my_offer_url = "SELECT `user_name`, `profile_url` FROM `user` WHERE `user_id` IN(?)";
+                                connection.query(my_offer_url, [offerByArray], function(err, userOfferResult) {
+                                    console.log(userOfferResult);
+                                    if (err) {
+                                        // console.log(err);
+                                        responses.sendError(res);
+                                        return;
+                                    } else {
+                                        for (var i = 0; i < userOfferResult.length; i++) {
+                                           if ( userOfferResult[i].profile_url != "" ) {
+                                                userOfferResult[i].profile_url = "/user/"+userOfferResult[i].profile_url;
+                                            }
                                         }
+                                
+                                        for (var k = 0; k < result.length; k++) {
+                                            for (var j = 0; j < userResult.length; j++) {
+                                                for (var l = 0; l < placeDetails.length; l++) {
+                                                    for (var m = 0; m < userOfferResult.length; m++) {
+                                                        if ( result[k].created_by_id == "" ) {
+                                                            result[k]["order_by_user_details"] = {};
+                                                        } else {
+                                                            result[k]["order_by_user_details"] = userResult[j];
+                                                        }
+                                                        if ( result[k].order_by_id == "" ) {
+                                                            result[k]["offer_user_details"] = {};
+                                                        } else {
+                                                            result[k]["offer_user_details"] = userOfferResult[m];
+                                                        }
+                                                        var placeResponse = {
+                                                            place_name: placeDetails[l].name,
+                                                            photos: placeDetails[l].icon
+                                                        }
+                                                        result[k]["place_details"] = placeResponse;
+                                                    }
+                                                }
+                                            }
+                                        }
+
+                                        // var response = {
+                                        //     flag: 1,
+                                        //     response: result,
+                                        //     message: "My order list details"
+                                        // };
+                                        // // res.send(JSON.stringify(response));
+                                        // res.status(constants.responseFlags.ACTION_COMPLETE).json(response);
+                                        callback(result);
+                                    }
+                                });
+                            } else {
+                                for (var k = 0; k < result.length; k++) {
+                                    for (var l = 0; l < placeDetails.length; l++) {
+                                        result[k]["order_by_user_details"] = {};
+                                        result[k]["offer_user_details"] = {};
                                         var placeResponse = {
                                             place_name: placeDetails[l].name,
                                             photos: placeDetails[l].icon
@@ -245,23 +347,15 @@ function get_myorderinactive_details(user_id, req, res, callback) {
                                         result[k]["place_details"] = placeResponse;
                                     }
                                 }
+                                callback(result);
                             }
-
-                            // var response = {
-                            //     flag: 1,
-                            //     response: result,
-                            //     message: "My order list details"
-                            // };
-                            // // res.send(JSON.stringify(response));
-                            // res.status(constants.responseFlags.ACTION_COMPLETE).json(response);
-                            callback(result);
                         }
                     });
-                } else {
-                            
+                } else {    
                     for (var k = 0; k < result.length; k++) {
                         for (var l = 0; l < placeDetails.length; l++) {
                             result[k]["order_by_user_details"] = {};
+                            result[k]["offer_user_details"] = {};
                             var placeResponse = {
                                 place_name: placeDetails[l].name,
                                 photos: placeDetails[l].icon
@@ -308,6 +402,7 @@ function get_myorderactive_details(user_id, req, res, callback) {
             return;
         } else if ( result.length > 0 ) {
             var userByArray = [];
+            var offerByArray = [];
             for (var i = 0; i < result.length; i++) {
                 if ( result[i].order_image != "" ) {
                     result[i].order_image = "/order/"+result[i].order_image;
@@ -315,11 +410,15 @@ function get_myorderactive_details(user_id, req, res, callback) {
                 if ( result[i].created_by_id != "" ) {
                     var created_by_id = result[i].created_by_id;
                     userByArray.push(created_by_id);
+                }
+                if ( result[i].order_by_id != "" ) {
+                    var order_by_id = result[i].order_by_id;
+                    offerByArray.push(order_by_id);
                 } 
             }
 
             get_myorder_place(result, function(placeDetails){
-                console.log(userByArray);
+                // console.log(userByArray);
                 if(userByArray.length > 0){
                     var my_order_url = "SELECT `user_name`, `profile_url` FROM `user` WHERE `user_id` IN(?)";
                     connection.query(my_order_url, [userByArray], function(err, userResult) {
@@ -333,15 +432,60 @@ function get_myorderactive_details(user_id, req, res, callback) {
                                     userResult[i].profile_url = "/user/"+userResult[i].profile_url;
                                 }
                             }
-                            
-                            for (var k = 0; k < result.length; k++) {
-                                for (var j = 0; j < userResult.length; j++) {
-                                    for (var l = 0; l < placeDetails.length; l++) {
-                                        if ( result[k].created_by_id == "" ) {
-                                            result[k]["order_by_user_details"] = {};
-                                        } else {
-                                            result[k]["order_by_user_details"] = userResult[j];
+                            if(offerByArray.length > 0){
+                                var offer_url = "SELECT `user_name`, `profile_url` FROM `user` WHERE `user_id` IN(?)";
+                                connection.query(offer_url, [offerByArray], function(err, userOfferResult) {
+                                    console.log(userOfferResult);
+                                    if (err) {
+                                        console.log(err);
+                                        responses.sendError(res);
+                                        return;
+                                    } else {
+                                        for (var i = 0; i < userOfferResult.length; i++) {
+                                           if ( userOfferResult[i].profile_url != "" ) {
+                                                userOfferResult[i].profile_url = "/user/"+userOfferResult[i].profile_url;
+                                            }
                                         }
+                                
+                                        for (var k = 0; k < result.length; k++) {
+                                            for (var j = 0; j < userResult.length; j++) {
+                                                for (var l = 0; l < placeDetails.length; l++) {
+                                                    for (var m = 0; m < userOfferResult.length; m++) {
+                                                        if ( result[k].created_by_id == "" ) {
+                                                            result[k]["order_by_user_details"] = {};
+                                                        } else {
+                                                            result[k]["order_by_user_details"] = userResult[j];
+                                                        }
+                                                        if ( result[k].order_by_id == "" ) {
+                                                            result[k]["offer_user_details"] = {};
+                                                        } else {
+                                                            result[k]["offer_user_details"] = userOfferResult[m];
+                                                        }
+                                                        var placeResponse = {
+                                                            place_name: placeDetails[l].name,
+                                                            photos: placeDetails[l].icon
+                                                        }
+                                                        result[k]["place_details"] = placeResponse;
+                                                    }
+                                                }
+                                            }
+                                        }
+
+                                        // var response = {
+                                        //     flag: 1,
+                                        //     response: result,
+                                        //     message: "My order list details"
+                                        // };
+                                        // // res.send(JSON.stringify(response));
+                                        // res.status(constants.responseFlags.ACTION_COMPLETE).json(response);
+                                        callback(result);
+                                    }
+                                });
+                            } else {
+                                for (var k = 0; k < result.length; k++) {
+                                    for (var l = 0; l < placeDetails.length; l++) {
+                                        result[k]["order_by_user_details"] = {};
+                                        result[k]["offer_user_details"] = {};
                                         var placeResponse = {
                                             place_name: placeDetails[l].name,
                                             photos: placeDetails[l].icon
@@ -349,16 +493,8 @@ function get_myorderactive_details(user_id, req, res, callback) {
                                         result[k]["place_details"] = placeResponse;
                                     }
                                 }
+                                callback(result);
                             }
-
-                            // var response = {
-                            //     flag: 1,
-                            //     response: result,
-                            //     message: "My order list details"
-                            // };
-                            // // res.send(JSON.stringify(response));
-                            // res.status(constants.responseFlags.ACTION_COMPLETE).json(response);
-                            callback(result);
                         }
                     });
                 } else {
@@ -366,6 +502,7 @@ function get_myorderactive_details(user_id, req, res, callback) {
                     for (var k = 0; k < result.length; k++) {
                         for (var l = 0; l < placeDetails.length; l++) {
                             result[k]["order_by_user_details"] = {};
+                            result[k]["offer_user_details"] = {};
                             var placeResponse = {
                                 place_name: placeDetails[l].name,
                                 photos: placeDetails[l].icon
@@ -392,6 +529,237 @@ function get_myorderactive_details(user_id, req, res, callback) {
             // };
             // // res.send(JSON.stringify(response));
             // res.status(constants.responseFlags.SHOW_ERROR_MESSAGE).json(response);
+            var result = [];
+            callback(result);
+        }
+    });
+    
+}
+
+function get_delivered_order_details(user_id, req, res, callback) {
+
+    var complete_status = 3;
+    var my_order_url = "SELECT * FROM `order_details` WHERE `created_by_id`=? AND `status`=?";
+    connection.query(my_order_url, [user_id, complete_status], function(err, result) {
+        console.log()
+        if (err) {
+            console.log(err);
+            responses.sendError(res);
+            return;
+        } else if ( result.length > 0 ) {
+            var userByArray = [];
+            var offerByArray = [];
+            for (var i = 0; i < result.length; i++) {
+                if ( result[i].order_image != "" ) {
+                    result[i].order_image = "order/"+result[i].order_image;
+                }
+                if ( result[i].created_by_id != "" ) {
+                    var created_by_id = result[i].created_by_id;
+                    userByArray.push(created_by_id);
+                }
+                if ( result[i].order_by_id != "" ) {
+                    var order_by_id = result[i].order_by_id;
+                    offerByArray.push(order_by_id);
+                } 
+            }
+
+            get_myorder_place(result, function(placeDetails){
+                console.log(userByArray);
+                if(userByArray.length > 0){
+                    var my_order_url = "SELECT `user_name`, `profile_url` FROM `user` WHERE `user_id` IN(?)";
+                    connection.query(my_order_url, [userByArray], function(err, userResult) {
+                        if (err) {
+                            console.log(err);
+                            responses.sendError(res);
+                            return;
+                        } else {
+                            for (var i = 0; i < userResult.length; i++) {
+                               if ( userResult[i].profile_url != "" ) {
+                                    userResult[i].profile_url = "user/"+userResult[i].profile_url;
+                                }
+                            }
+
+                            var offer_url = "SELECT `user_name`, `profile_url` FROM `user` WHERE `user_id` IN(?)";
+                            connection.query(offer_url, [offerByArray], function(err, userOfferResult) {
+                                if (err) {
+                                    console.log(err);
+                                    responses.sendError(res);
+                                    return;
+                                } else {
+                                    for (var i = 0; i < userOfferResult.length; i++) {
+                                       if ( userOfferResult[i].profile_url != "" ) {
+                                            userOfferResult[i].profile_url = "user/"+userOfferResult[i].profile_url;
+                                        }
+                                    }
+                            
+                                    for (var k = 0; k < result.length; k++) {
+                                        for (var j = 0; j < userResult.length; j++) {
+                                            for (var l = 0; l < placeDetails.length; l++) {
+                                                for (var m = 0; m < userOfferResult.length; m++) {
+                                                    if ( result[k].created_by_id == "" ) {
+                                                        result[k]["order_by_user_details"] = {};
+                                                    } else {
+                                                        result[k]["order_by_user_details"] = userResult[j];
+                                                    }
+                                                    if ( result[k].order_by_id == "" ) {
+                                                        result[k]["offer_user_details"] = {};
+                                                    } else {
+                                                        result[k]["offer_user_details"] = userOfferResult[m];
+                                                    }
+                                                    var placeResponse = {
+                                                        place_name: placeDetails[l].name,
+                                                        photos: placeDetails[l].icon
+                                                    }
+                                                    result[k]["place_details"] = placeResponse;
+                                                }
+                                            }
+                                        }
+                                    }
+
+                                    // var response = {
+                                    //     flag: 1,
+                                    //     response: result,
+                                    //     message: "My order list details"
+                                    // };
+                                    // // res.send(JSON.stringify(response));
+                                    // res.status(constants.responseFlags.ACTION_COMPLETE).json(response);
+                                    callback(result);
+                                }
+                            });
+                        }
+                    });
+                } else {
+                            
+                    for (var k = 0; k < result.length; k++) {
+                        for (var l = 0; l < placeDetails.length; l++) {
+                            for (var m = 0; m < userOfferResult.length; m++) {
+                                result[k]["order_by_user_details"] = {};
+                                result[k]["offer_user_details"] = {};
+                                var placeResponse = {
+                                    place_name: placeDetails[l].name,
+                                    photos: placeDetails[l].icon
+                                }
+                                result[k]["place_details"] = placeResponse;
+                            }
+                        }
+                    }
+
+                    // var response = {
+                    //     flag: 1,
+                    //     response: result,
+                    //     message: "My order list details"
+                    // };
+                    // // res.send(JSON.stringify(response));
+                    // res.status(constants.responseFlags.ACTION_COMPLETE).json(response);
+                    callback(result);
+                }
+            });
+        } else {
+            // var response = {
+            //     flag: 1,
+            //     response: {},
+            //     message: "No data found"
+            // };
+            // // res.send(JSON.stringify(response));
+            // res.status(constants.responseFlags.SHOW_ERROR_MESSAGE).json(response);
+            var result = [];
+            callback(result);
+        }
+    });
+    
+}
+
+function get_delivered_offer_details(user_id, req, res, callback) {
+
+    var my_offer_url = "SELECT * FROM `offer` WHERE `offer_created_by_id`=?";
+    connection.query(my_offer_url, [user_id], function(err, result) {
+        console.log()
+        if (err) {
+            console.log(err);
+            responses.sendError(res);
+            return;
+        } else if ( result.length > 0 ) {
+            var userByArray = [];
+            var orderByArray = [];
+            for (var i = 0; i < result.length; i++) {
+                if ( result[i].offer_created_to_id != "" ) {
+                    var offer_created_to_id = result[i].offer_created_to_id;
+                    userByArray.push(offer_created_to_id);
+                }
+                orderByArray.push(result[i].order_id);
+            }
+
+            var my_order_url = "SELECT * FROM `order_details` WHERE `order_id` IN(?)";
+            connection.query(my_order_url, [orderByArray], function(err, orderResult) {
+                if (err) {
+                    console.log(err);
+                    responses.sendError(res);
+                    return;
+                } else {
+                    for (var i = 0; i < orderResult.length; i++) {
+                        if ( orderResult[i].order_image != "" ) {
+                            orderResult[i].order_image = "order/"+orderResult[i].order_image;
+                        }
+                    }
+                    // console.log(orderResult);
+                    get_myorder_place(orderResult, function(placeDetails){
+
+                        if(userByArray.length > 0){
+                            var my_order_url = "SELECT `user_name`, `profile_url` FROM `user` WHERE `user_id` IN(?)";
+                            connection.query(my_order_url, [userByArray], function(err, userResult) {
+                                if (err) {
+                                    console.log(err);
+                                    responses.sendError(res);
+                                    return;
+                                } else {
+                                    for (var i = 0; i < userResult.length; i++) {
+                                       if ( userResult[i].profile_url != "" ) {
+                                            userResult[i].profile_url = "user/"+userResult[i].profile_url;
+                                        }
+                                    }
+                                    for (var k = 0; k < result.length; k++) {
+                                        for (var j = 0; j < userResult.length; j++) {
+                                            for (var l = 0; l < placeDetails.length; l++) {
+                                                for (var m = 0; m < orderResult.length; m++) {
+                                                    if ( result[k].created_by_id == "" ) {
+                                                        result[k]["user_details"] = {};
+                                                    } else {
+                                                        result[k]["user_details"] = userResult[j];
+                                                    }
+                                                    if ( result[k].order_id == orderResult[m].order_id ) {
+                                                        result[k]["order_details"] = orderResult[m]; 
+                                                    }
+                                                    var placeResponse = {
+                                                        place_name: placeDetails[l].name,
+                                                        photos: placeDetails[l].icon
+                                                    }
+                                                    result[k]["place_details"] = placeResponse;
+                                                }
+                                            }
+                                        }
+                                    }
+                                    callback(result);
+                                }
+                            });
+                        } else {
+                                    
+                            for (var k = 0; k < result.length; k++) {
+                                for (var l = 0; l < placeDetails.length; l++) {
+                                    result[k]["user_details"] = {};
+                                    result[k]["order_details"] = {};
+                                    var placeResponse = {
+                                        place_name: placeDetails[l].name,
+                                        photos: placeDetails[l].icon
+                                    }
+                                    result[k]["place_details"] = placeResponse;
+                                }
+                            }
+                            callback(result);
+                        }
+                    });
+                }
+            });
+        } else {
             var result = [];
             callback(result);
         }
@@ -464,17 +832,27 @@ function create_order (access_token,order_id, order_number, user_id, user_id, pl
                     responses.sendError(res);
                     return;
                 } else {
+                    var userArray = [];
                     for ( var i=0; i<placeResult.length; i++) {
-                        // console.log("sjhsjhs");
-                        var sql = "SELECT * FROM `user` WHERE `user_id`=?";
-                        connection.query(sql, [placeResult[i].user_id], function(err, userResult){
-                            if (err) {
-                                responses.sendError(res);
-                                return;
-                            } else {
-                                
-                                if ( userResult[0].account_balance < 600 ){
+                        userArray.push(placeResult[i].user_id);
+                    }
+                    var sql = "SELECT * FROM `user` WHERE `user_id` IN(?)";
+                    connection.query(sql, [userArray], function(err, userResult){
+                        if (err) {
+                            responses.sendError(res);
+                            return;
+                        } else {
+                            // for (var i = 0; i < userResult.length; i++) {
+                            for (var i in userResult) {
 
+                                console.log(userResult[i].device_token);
+                                if ( userResult[i].account_balance == '' ) {
+                                    var acc = 0;
+                                } else {
+                                    var acc = parseInt(userResult[i].account_balance);
+                                }
+
+                                if ( acc < 600 ) {
                                     var notification_unique_id = utils.generateRandomString();
                                     var notification_id = md5(notification_unique_id);
                                     var currentTime = new Date();
@@ -483,30 +861,53 @@ function create_order (access_token,order_id, order_number, user_id, user_id, pl
                                     var notification_text = "There are new order waiting in - "+place_name;
                                     
                                     var sql = "INSERT INTO `notification`(`notification_id`,`sender_id`, `receiver_id`, `notification_type`, `notification_text`, `notification_type_id`, `created_on`) VALUES (?,?,?,?,?,?,?)";
-                                    var value = [notification_id, user_id, userResult[0].user_id, notification_type, notification_text , order_id, created_on];
+                                    var value = [notification_id, user_id, userResult[i].user_id, notification_type, notification_text , order_id, created_on];
                                     connection.query(sql, value, function (err, result) {
-                                        console.log(err);
+                                        // console.log(err);
                                         if (err) {
                                             responses.sendError(res);
                                             return;
                                         } else {
                                             var serverKey = config.get('serverFCMKey'); //put your server key here 
-                                            console.log(userResult[0].device_token);
+                                            // console.log(userResult[i].device_token);
                                             var fcm = new FCM(serverKey);
                                          
-                                            var message = { //this may vary according to the message type (single recipient, multicast, topic, et cetera) 
-                                                to: userResult[0].device_token, 
-                                                collapse_key: 'otlbni',
-                                                notification: {
-                                                    title: 'OTLBNI', 
-                                                    body:  notification_text
-                                                },
-                                                data: {
-                                                    notification_type: notification_type,
-                                                    notification_type_id: order_id,
-                                                    access_token: access_token
-                                                }
-                                            };
+                                         	if ( userResult[i].device_type == 1 ) {
+                                            	var message = { //this may vary according to the message type (single recipient, multicast, topic, et cetera) 
+                                                    to: userResult[i].device_token, 
+                                                    collapse_key: 'otlbni',
+                                                    notification: {
+											        	"title" : "OTLBNI",
+											            "body" : notification_text,
+													    "aps" : {
+													        "alert" : {
+													            "data" : {
+											                        "notification_type": notification_type,
+	                                                                "notification_type_id": order_id,
+	                                                                "access_token": access_token,
+	                                                                "sender_id": user_id
+											                    }
+													        },
+													        "badge" : 5
+													    }
+													}
+                                                };
+                                            } else {
+	                                            var message = { //this may vary according to the message type (single recipient, multicast, topic, et cetera) 
+	                                                to: userResult[i].device_token, 
+	                                                collapse_key: 'otlbni',
+	                                                notification: {
+	                                                    title: 'OTLBNI', 
+	                                                    body:  notification_text
+	                                                },
+	                                                data: {
+	                                                    notification_type: notification_type,
+	                                                    notification_type_id: order_id,
+	                                                    access_token: access_token,
+	                                                    sender_id: user_id
+	                                                }
+	                                            };
+	                                        }
                                             
                                             fcm.send(message, function(err, response){
                                                 if (err) {
@@ -519,11 +920,10 @@ function create_order (access_token,order_id, order_number, user_id, user_id, pl
                                             });
                                         }
                                     });
-
                                 } 
                             }
-                        });
-                    }
+                        }
+                    });
                 }
             });
             // notification.send_notification(access_token, function(result) {
@@ -569,39 +969,59 @@ exports.getNotificationDetails = function(req, res) {
                 // var user_id = result[0].user_id;
 
                 if ( notification_type == "1" ) {
-                    var sql = "SELECT * FROM `order_details` WHERE `order_id`=?";
-                    connection.query(sql, [notification_type_id], function(err, orderDetails){
+
+                    var offer_created_by_id = result[0].user_id;
+                    var check_offer_sql = "SELECT `status` FROM `offer` WHERE `offer_created_by_id`=? AND `order_id`=? AND `offer_created_to_id`=?";
+                    connection.query(check_offer_sql, [offer_created_by_id, notification_type_id, sender_id], function(err, check_offer_result){
+                        console.log("offer_created_by_id"+offer_created_by_id);
+                        console.log("notification_type_id"+notification_type_id);
+                        console.log("offer_created_to_id"+sender_id);
                         if (err) {
                             responses.sendError(res);
                             return;
+                        } else if ( check_offer_result.length > 0 ){
+                            var response = {
+                                flag: 5,
+                                response: {},
+                                message: "You already created offer"
+                            };
+                            res.status(constants.responseFlags.ACTION_COMPLETE).json(response);
                         } else {
-                            var place_id = orderDetails[0].place_id;
-                            var user_id = orderDetails[0].created_by_id;
+                            var sql = "SELECT * FROM `order_details` WHERE `order_id`=?";
+                            connection.query(sql, [notification_type_id], function(err, orderDetails){
+                                if (err) {
+                                    responses.sendError(res);
+                                    return;
+                                } else {
+                                    var place_id = orderDetails[0].place_id;
+                                    var user_id = orderDetails[0].created_by_id;
 
-                            async.parallel(
-                                [  
-                                    function(callback) {
-                                        get_place_details(place_id,req,res,function(get_place_details_result){
-                                            callback(null,get_place_details_result);
-                                        });
-                                    },
-                                    //calling total rides for today function
-                                    function(callback) {
-                                        get_user_details(user_id,req,res,function(get_user_details_result){
-                                            callback(null,get_user_details_result);
-                                        });
-                                    }
-                                ], function(err, results) {
-                                    console.log(err);
-                                    console.log(results);
-                                    var response = {
-                                        flag: 1,
-                                        response: {"user_details": results[1], "order_details": orderDetails[0], "place_details": results[0]},
-                                        message: "Data fetched successfully"
-                                    }
-                                    res.status(constants.responseFlags.ACTION_COMPLETE).json(response);
+                                    async.parallel(
+                                        [  
+                                            function(callback) {
+                                                get_place_details(place_id,req,res,function(get_place_details_result){
+                                                    callback(null,get_place_details_result);
+                                                });
+                                            },
+                                            //calling total rides for today function
+                                            function(callback) {
+                                                get_user_details(user_id,req,res,function(get_user_details_result){
+                                                    callback(null,get_user_details_result);
+                                                });
+                                            }
+                                        ], function(err, results) {
+                                            // console.log(err);
+                                            console.log(results);
+                                            var response = {
+                                                flag: 1,
+                                                response: {"user_details": results[1], "order_details": orderDetails[0], "place_details": results[0]},
+                                                message: "Data fetched successfully"
+                                            }
+                                            res.status(constants.responseFlags.ACTION_COMPLETE).json(response);
+                                        }
+                                    );
                                 }
-                            );
+                            });
                         }
                     });
                 } else if ( notification_type == "2" ) {
@@ -628,7 +1048,8 @@ exports.getNotificationDetails = function(req, res) {
                                     return;
                                 } else {
                                     var place_id = orderDetails[0].place_id;
-                                    var user_id = orderDetails[0].created_by_id;
+                                    var user_id = sender_id;
+                                    var order_created_by_id = orderDetails[0].created_by_id;
 
                                     async.parallel(
                                         [  
@@ -638,7 +1059,7 @@ exports.getNotificationDetails = function(req, res) {
                                                 });
                                             },
                                             function(callback) {
-                                                get_user_details_with_rating(user_id, notification_type_id, req,res,function(get_user_details_with_rating_result){
+                                                get_user_details_with_rating(user_id, order_created_by_id, notification_type_id, req,res,function(get_user_details_with_rating_result){
                                                     callback(null,get_user_details_with_rating_result);
                                                 });
                                             }
@@ -667,72 +1088,101 @@ exports.getNotificationDetails = function(req, res) {
                             responses.sendError(res);
                             return;
                         } else {
-                            var user_sql = "SELECT * FROM `user` WHERE `user_id`=?";
-                            connection.query(user_sql, [sender_id], function(err, userDetails){
-                                if (err) {
-                                    responses.sendError(res);
-                                    return;
+                            if ( orderDetails[0].status == 5 ) {
+                                var response = {
+                                    flag: 5,
+                                    response: {},
+                                    message: "Your order has been cancelled"
+                                }
+                                res.status(constants.responseFlags.ACTION_COMPLETE).json(response);
+                            } else {
+                                if ( orderDetails[0].status == 3 ) {
+                                    var response = {
+                                        flag: 5,
+                                        response: {},
+                                        message: "Your order has been completed"
+                                    }
+                                    res.status(constants.responseFlags.ACTION_COMPLETE).json(response);
                                 } else {
-                                    
-                                    var user_sql = "SELECT * FROM `message` WHERE `receiver_id`=?";
-                                    connection.query(user_sql, [sender_id], function(err, messageDetails){
-                                        if (err) {
-                                            responses.sendError(res);
-                                            return;
-                                        } else {
+                                    get_place_details(orderDetails[0].place_id, req, res, function(placeDetails){
+                                        // console.log(placeDetails[0]);
+                                        var user_sql = "SELECT * FROM `user` WHERE `user_id`=?";
+                                        connection.query(user_sql, [sender_id], function(err, userDetails){
+                                            if (err) {
+                                                responses.sendError(res);
+                                                return;
+                                            } else {
+                                                
+                                                var user_sql = "SELECT * FROM `message` WHERE `message_unique_id`=?";
+                                                connection.query(user_sql, [notification_type_id], function(err, messageDetails){
+                                                    if (err) {
+                                                        responses.sendError(res);
+                                                        return;
+                                                    } else {
+                                                        for (var i = 0; i < messageDetails.length; i++) {
+                                                            if ( messageDetails[i].sender_id == user_id ) {
+                                                                messageDetails[i].user_type = 1;
+                                                            } else {
+                                                                messageDetails[i].user_type = 0;
+                                                            }
+                                                        }
 
-                                        	// var curent_user_sql = "SELECT * FROM `user` WHERE `user_id`=?";
-				                            // connection.query(curent_user_sql, [user_id], function(err, userCurrentDetails){
-				                            //     if (err) {
-				                            //         responses.sendError(res);
-				                            //         return;
-				                            //     } else {
-				                            var user_offer_sql = "SELECT * FROM `offer` WHERE `order_id`=? AND `offer_created_to_id`=? OR `offer_created_by_id`=?";
-							                connection.query(user_offer_sql, [notification_type_id, sender_id, sender_id], function(err, user_offer_result) {
-							                	console.log(err);
-						                        console.log(user_offer_result);
-						                        if (err) {
-						                            responses.sendError(res);
-						                            return;
-						                        } else {
-				                                	var user_rating_sql = "SELECT `rating_count` FROM `user_rating` WHERE `user_rating_to_id`=?";
-										            connection.query(user_rating_sql, [sender_id], function(err, user_rating_result) {
-										                if (err) {
-										                    responses.sendError(res);
-										                    return;
-										                } else {
-						                                	// if (userCurrentDetails[0].profile_url != '') {
-				                                   //              userCurrentDetails[0].profile_url = "user/"+userCurrentDetails[0].profile_url;
-				                                   //          }
-						                                	if (userDetails[0].profile_url != '') {
-				                                                userDetails[0].profile_url = "user/"+userDetails[0].profile_url;
-				                                            }
+            				                            var user_offer_sql = "SELECT * FROM `offer` WHERE `order_id`=? AND `offer_created_to_id`=? OR `offer_created_by_id`=?";
+            							                connection.query(user_offer_sql, [notification_type_id, sender_id, sender_id], function(err, user_offer_result) {
+            							                	
+            						                        if (err) {
+            						                            responses.sendError(res);
+            						                            return;
+            						                        } else {
+            				                                	var user_rating_sql = "SELECT `rating_count` FROM `user_rating` WHERE `user_rating_to_id`=?";
+            										            connection.query(user_rating_sql, [sender_id], function(err, user_rating_result) {
+            										                if (err) {
+            										                    responses.sendError(res);
+            										                    return;
+            										                } else {
 
-				                                            if ( user_rating_result > 0 ) {
-								                                userDetails[0].user_rating = user_rating_result[0];
-								                            } else {
-								                                userDetails[0].user_rating = [{"rating_count": "0"}];
-								                            }
+                                                                        var user_rating_text = 0;
+                                                                        for (var i = 0; i < user_rating_result.length; i++) {
+                                                                            user_rating_text = user_rating_text + parseInt(user_rating_result[i].rating_count);
+                                                                        }
+                                                                        // console.log(user_rating_text);
+                                                                        var user_rating_length = user_rating_result.length;
+                                                                        var user_rating_count  = user_rating_text / user_rating_length;
+                                                                        // console.log(user_rating_count);
 
-				                                            var response = {
-				                                                flag: 1,
-				                                                response: {
-				                                                    "user_details": userDetails[0],
-				                                                    "offer_details": user_offer_result[0],
-				                                                    "message_details": messageDetails,
-				                                                    "order_details": orderDetails[0]
-				                                                },
-				                                                message:"Data fetched successfully"
-				                                            }
-				                                            res.status(constants.responseFlags.ACTION_COMPLETE).json(response);
-				                                        }
-				                                    });
-				                                }
-				                            }); 
-                                        }
+            						                                	if (userDetails[0].profile_url != '') {
+            				                                                userDetails[0].profile_url = "user/"+userDetails[0].profile_url;
+            				                                            }
+
+            				                                            if ( user_rating_result.length > 0 ) {
+            								                                userDetails[0].user_rating = [{"rating_count": user_rating_count}];
+            								                            } else {
+            								                                userDetails[0].user_rating = [{"rating_count": "0"}];
+            								                            }
+                                                                        // console.log(userDetails[0]);
+            				                                            var response = {
+            				                                                flag: 1,
+            				                                                response: {
+            				                                                    "user_details": userDetails[0],
+            				                                                    "offer_details": user_offer_result[0],
+            				                                                    "message_details": messageDetails,
+            				                                                    "order_details": orderDetails[0],
+                                                                                "place_details": placeDetails
+            				                                                },
+            				                                                message:"Data fetched successfully"
+            				                                            }
+            				                                            res.status(constants.responseFlags.ACTION_COMPLETE).json(response);
+            				                                        }
+            				                                    });
+            				                                }
+            				                            }); 
+                                                    }
+                                                });
+                                            }
+                                        });
                                     });
                                 }
-                            });
+                            }
                         }
                     });
                 }
@@ -769,7 +1219,7 @@ function get_place_details (place_id,req, res,callback) {
     });
 }
 
-function get_user_details_with_rating(user_id, order_id, req, res, callback) {
+function get_user_details_with_rating(user_id, order_created_by_id, order_id, req, res, callback) {
 
     var sql = "SELECT * FROM `user` WHERE `user_id`=? LIMIT 1";
     connection.query(sql, [user_id], function(err, user_details){
@@ -785,18 +1235,26 @@ function get_user_details_with_rating(user_id, order_id, req, res, callback) {
                 } else {
 
                     var user_offer_sql = "SELECT * FROM `offer` WHERE `order_id`=? AND `offer_created_to_id`=?";
-                    connection.query(user_offer_sql, [order_id, user_id], function(err, user_offer_result) {
+                    connection.query(user_offer_sql, [order_id, order_created_by_id], function(err, user_offer_result) {
                         console.log(user_offer_result);
                         if (err) {
                             responses.sendError(res);
                             return;
                         } else {
-                            user_details[0].password = "";
+                            // user_details[0].password = "";
                             if ( user_details[0].profile_url != '' ) {
                                 user_details[0].profile_url = 'user/'+user_details[0].profile_url;
                             }
                             if ( user_rating_result > 0 ) {
-                                user_details[0].user_rating = user_rating_result[0];
+                                var user_rating_text = 0;
+                                for (var i = 0; i < user_offer_result.length; i++) {
+                                    user_rating_text = user_rating_text + parseInt(user_offer_result[i].rating_count);
+                                }
+                                var user_rating_length = user_offer_result.length;
+                                var user_rating_count  = user_rating_text / user_rating_length;
+                                        
+                                // user_details[0].user_rating = user_rating_result[0];
+                                user_details[0].user_rating = [{"rating_count": user_rating_count}];
                             } else {
                                 user_details[0].user_rating = [{"rating_count": "0"}];
                             }
@@ -822,7 +1280,7 @@ function get_user_details(user_id,req, res, callback) {
         if (err) {
 
         } else {
-            user_details[0].password = "";
+            // user_details[0].password = "";
             if ( user_details[0].profile_url != '' ) {
                 user_details[0].profile_url = 'user/'+user_details[0].profile_url;
             }
@@ -868,7 +1326,7 @@ exports.create_offer = function(req, res) {
                         var response = {
                             flag: 5,
                             response: {},
-                            message: "You already created order"
+                            message: "You already created offer"
                         };
                         res.status(constants.responseFlags.ACTION_COMPLETE).json(response);
                     } else {
@@ -920,19 +1378,42 @@ exports.create_offer = function(req, res) {
                                                         console.log(userResult[0].device_token);
                                                         var fcm = new FCM(serverKey);
 
-                                                        var message = { //this may vary according to the message type (single recipient, multicast, topic, et cetera) 
-                                                            to: userResult[0].device_token, 
-                                                            collapse_key: 'otlbni',
-                                                            notification: {
-                                                                title: 'OTLBNI', 
-                                                                body: notification_text 
-                                                            },
-                                                            data: {
-                                                                notification_type: notification_type,
-                                                                notification_type_id: order_id,
-                                                                access_token: access_token
-                                                            }
-                                                        };
+                                                        if ( userResult[0].device_type == 1 ) {
+                                                        	var message = { //this may vary according to the message type (single recipient, multicast, topic, et cetera) 
+	                                                            to: userResult[0].device_token, 
+	                                                            collapse_key: 'otlbni',
+	                                                            notification: {
+														        	"title" : "OTLBNI",
+														            "body" : notification_text,
+																    "aps" : {
+																        "alert" : {
+																            "data" : {
+														                        "notification_type": notification_type,
+				                                                                "notification_type_id": order_id,
+				                                                                "access_token": access_token,
+				                                                                "sender_id": offer_created_by_id
+														                    }
+																        },
+																        "badge" : 5
+																    }
+																}
+	                                                        };
+                                                        } else {
+	                                                        var message = { //this may vary according to the message type (single recipient, multicast, topic, et cetera) 
+	                                                            to: userResult[0].device_token, 
+	                                                            collapse_key: 'otlbni',
+	                                                            notification: {
+	                                                                title: 'OTLBNI', 
+	                                                                body: notification_text 
+	                                                            },
+	                                                            data: {
+	                                                                notification_type: notification_type,
+	                                                                notification_type_id: order_id,
+	                                                                access_token: access_token,
+	                                                                sender_id: offer_created_by_id
+	                                                            }
+	                                                        };
+	                                                    }
                                                         
                                                         fcm.send(message, function(err, response){
                                                             if (err) {
@@ -987,8 +1468,8 @@ exports.cancel_order = function(req, res) {
             } else {
                 var user_id = result[0].user_id;
                 var pending_status = 0;
-                var sql = "SELECT * FROM `order_details` WHERE `order_id`=? AND `status`=? AND `created_by_id`=?";
-                connection.query(sql, [order_id, pending_status, user_id], function(err, checkResult){
+                var sql = "SELECT * FROM `order_details` WHERE `order_id`=? AND `created_by_id`=?";
+                connection.query(sql, [order_id, user_id], function(err, checkResult){
                     if ( err ) {
                         responses.sendError(res);
                         return;
@@ -1073,6 +1554,9 @@ exports.accept_reject_offer = function(req, res) {
 
                                             var notification_unique_id = utils.generateRandomString();
                                             var notification_id = md5(notification_unique_id);
+                                            var message_unique_iddd = utils.generateRandomString();
+                                            var notification_message_id = md5(message_unique_iddd);
+
                                             var currentTime = new Date();
                                             var created_on = Math.round(currentTime.getTime() / 1000);
                                             
@@ -1091,20 +1575,42 @@ exports.accept_reject_offer = function(req, res) {
                                                     console.log(offerUserResult[0].device_token);
                                                     var fcm = new FCM(serverKey);
 
-                                                    var message = { //this may vary according to the message type (single recipient, multicast, topic, et cetera) 
-                                                        to: offerUserResult[0].device_token, 
-                                                        collapse_key: 'otlbni',
-                                                        notification: {
-                                                            title: 'OTLBNI', 
-                                                            body: notification_text 
-                                                        },
-                                                        data: {
-                                                            notification_type: notification_type,
-                                                            notification_type_id: order_id,
-                                                            access_token: access_token,
-                                                            sender_id: user_id
-                                                        }
-                                                    };
+                                                    if ( offerUserResult[0].device_type == 1 ) {
+                                                    	var message = { //this may vary according to the message type (single recipient, multicast, topic, et cetera) 
+                                                            to: offerUserResult[0].device_token, 
+                                                            collapse_key: 'otlbni',
+                                                            notification: {
+													        	"title" : "OTLBNI",
+													            "body" : notification_text,
+															    "aps" : {
+															        "alert" : {
+															            "data" : {
+													                        "notification_type": notification_type,
+			                                                                "notification_type_id": order_id,
+			                                                                "access_token": access_token,
+			                                                                "sender_id": user_id
+													                    }
+															        },
+															        "badge" : 5
+															    }
+															}
+                                                        };
+                                                    } else {
+	                                                    var message = { //this may vary according to the message type (single recipient, multicast, topic, et cetera) 
+	                                                        to: offerUserResult[0].device_token, 
+	                                                        collapse_key: 'otlbni',
+	                                                        notification: {
+	                                                            title: 'OTLBNI', 
+	                                                            body: notification_text 
+	                                                        },
+	                                                        data: {
+	                                                            notification_type: notification_type,
+	                                                            notification_type_id: order_id,
+	                                                            access_token: access_token,
+	                                                            sender_id: user_id
+	                                                        }
+	                                                    };
+	                                                }
                                                     
                                                     fcm.send(message, function(err, response){
                                                         if (err) {
@@ -1123,7 +1629,7 @@ exports.accept_reject_offer = function(req, res) {
                                                         response: {
                                                             "notification_type": "3",
                                                             "notification_type_id": order_id,
-                                                            "sender_id": user_id
+                                                            "sender_id": offer_created_by_id
                                                         },
                                                         message: "Offer accepted successfully."
                                                     };
@@ -1149,8 +1655,8 @@ exports.accept_reject_offer = function(req, res) {
                                     var currentTime = new Date();
                                     var created_on = Math.round(currentTime.getTime() / 1000);
                                     
-                                    var notification_type = "4";
-                                    var notification_text = "Your order has rejected!";
+                                    var notification_type = "5";
+                                    var notification_text = "Your order has been rejected!";
 
                                     var sql = "INSERT INTO `notification`(`notification_id`,`sender_id`, `receiver_id`, `notification_type`, `notification_text`, `notification_type_id`, `created_on`) VALUES (?,?,?,?,?,?,?)";
                                     var value = [notification_id, user_id, offer_created_by_id, notification_type, notification_text , order_id, created_on];
@@ -1164,19 +1670,41 @@ exports.accept_reject_offer = function(req, res) {
                                             console.log(offerUserResult[0].device_token);
                                             var fcm = new FCM(serverKey);
 
-                                            var message = { //this may vary according to the message type (single recipient, multicast, topic, et cetera) 
-                                                to: offerUserResult[0].device_token, 
-                                                collapse_key: 'otlbni',
-                                                notification: {
-                                                    title: 'OTLBNI', 
-                                                    body: notification_text 
-                                                },
-                                                data: {
-                                                    notification_type: notification_type,
-                                                    notification_type_id: order_id,
-                                                    access_token: access_token
-                                                }
-                                            };
+                                            if ( offerUserResult[0].device_type == 1 ) {
+                                            	var message = { //this may vary according to the message type (single recipient, multicast, topic, et cetera) 
+                                                    to: offerUserResult[0].device_token, 
+                                                    collapse_key: 'otlbni',
+                                                    notification: {
+											        	"title" : "OTLBNI",
+											            "body" : notification_text,
+													    "aps" : {
+													        "alert" : {
+													            "data" : {
+											                        "notification_type": notification_type,
+	                                                                "notification_type_id": order_id,
+	                                                                "access_token": access_token
+											                    }
+													        },
+													        "badge" : 5
+													    }
+													}
+                                                };
+                                            } else {
+
+	                                            var message = { //this may vary according to the message type (single recipient, multicast, topic, et cetera) 
+	                                                to: offerUserResult[0].device_token, 
+	                                                collapse_key: 'otlbni',
+	                                                notification: {
+	                                                    title: 'OTLBNI', 
+	                                                    body: notification_text 
+	                                                },
+	                                                data: {
+	                                                    notification_type: notification_type,
+	                                                    notification_type_id: order_id,
+	                                                    access_token: access_token
+	                                                }
+	                                            };
+	                                        }
                                             
                                             fcm.send(message, function(err, response){
                                                 if (err) {

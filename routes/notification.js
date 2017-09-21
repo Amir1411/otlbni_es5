@@ -53,13 +53,13 @@ exports.get_user_notification_list = function(req, res) {
 				return;
 	        } else {
 	        	var user_id = result[0].user_id;
-	        	var sql = "SELECT * FROM `notification` where `receiver_id`=?";
+	        	var sql = "SELECT * FROM `notification` where `receiver_id`=? ORDER BY `row_id` DESC";
 	        	connection.query(sql, [user_id], function(err, result) {
 	        		if ( err ) {
 	        			responses.sendError(res);
                     	return;
 	        		} else {
-	        			// console.log(result);
+	        			console.log(result);
 	        			var response = {
 	        				flag: 1,
 	        				message: "Get notification List",

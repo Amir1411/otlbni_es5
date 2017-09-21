@@ -39,6 +39,7 @@ exports.get_near_by_restaurant_list = function(req, res){
         var locations = places.results; 
         var responseArray = [];
         var mostActiveArray = [];
+        console.log(locations);
         for (var i = 0; i < locations.length; i++) {
             if ( locations[i].photos == undefined ) {
                 locations[i].photos = "";

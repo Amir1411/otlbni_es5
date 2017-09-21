@@ -163,7 +163,7 @@ exports.verify_user = function(req, res) {
 				if ( user[0]["profile_url"] != "" ) {
 					user[0]["profile_url"] = "user/"+user[0]["profile_url"];
 				}
-				user[0]["password"] = "";
+				// user[0]["password"] = "";
 				var response = {
 					flag: 1,
 					response: user[0],
@@ -426,7 +426,7 @@ exports.verify_otp = function(req, res) {
 				if ( user[0]["profile_url"] != "" ) {
 					user[0]["profile_url"] = "user/"+user[0]["profile_url"];
 				}
-				user[0]["password"] = "";
+				// user[0]["password"] = "";
 				user[0]["is_verified"] = is_verified;
 				var response = {
 					flag: 1,
@@ -551,7 +551,7 @@ function update_user_profile(access_token,is_thumbnail,user_profile_url,user_nam
 								responses.sendError(res);
 								return;
 							} else {
-								user[0]["password"] = "";
+								// user[0]["password"] = "";
 								if ( user[0]["profile_url"] != "" ) {
 									user[0]["profile_url"] = "user/"+profile_url;
 								} 
@@ -582,7 +582,7 @@ function update_user_profile(access_token,is_thumbnail,user_profile_url,user_nam
 						responses.sendError(res);
 						return;
 					} else {
-						user[0]["password"] = "";
+						// user[0]["password"] = "";
 						if ( user[0]["profile_url"] != "" ) {
 							user[0]["profile_url"] = "user/"+profile_url;
 						} 
@@ -624,7 +624,14 @@ exports.get_user_details = function(req, res) {
 	        		if (err) {
 	        			console.log(err);
 	        		} else {
-	        			var revenue_sql = "SELECT * FROM `delivery` WHERE `delivered_to_id`=?";
+
+	        			for (var i = 0; i < result.length; i++) {
+        					if( result[i].profile_url != '' ) {
+        						result[i].profile_url = 'user/'+result[i].profile_url;
+        					}
+    					}
+
+	        			var revenue_sql = "SELECT * FROM `delivery` WHERE `delivered_by_id`=?";
 	        			connection.query(revenue_sql, [user_id], function(err, revenueResult){
 	        				if (err){
 	        					responses.sendError(res);
@@ -632,11 +639,13 @@ exports.get_user_details = function(req, res) {
 	        				} else {
 	        					var total_revenue = 0;
 	        					for (var i = 0; i < revenueResult.length; i++) {
-	        						total_revenue = total_revenue + revenueResult[i].delivered_amount;
+	        						console.log(revenueResult[i].delivered_amount);
+	        						total_revenue = total_revenue + parseInt(revenueResult[i].delivered_amount);
 	        					}
+	        					console.log(total_revenue);
 	        					var order_count = revenueResult.length;
 
-	        					var bill_sql = "SELECT * FROM `delivery` WHERE `delivered_by_id`=?";
+	        					var bill_sql = "SELECT * FROM `delivery` WHERE `delivered_to_id`=?";
 			        			connection.query(bill_sql, [user_id], function(err, billResult){
 			        				if (err){
 			        					responses.sendError(res);
@@ -645,25 +654,30 @@ exports.get_user_details = function(req, res) {
 			        					var order_cost = 0;
 			        					var delivered_amount = 0;
 			        					for (var i = 0; i < billResult.length; i++) {
-			        						order_cost = order_cost + billResult[i].order_cost;
-			        						delivered_amount = delivered_amount + billResult[i].delivered_amount;
+			        						order_cost = order_cost + parseInt(billResult[i].order_cost);
+			        						delivered_amount = delivered_amount + parseInt(billResult[i].delivered_amount);
 			        					}
 			        					var total_bill_paid = order_cost + delivered_amount;
 
 			        					var user_rating_sql = "SELECT * FROM `user_rating` WHERE `user_rating_to_id`=?";
-					        			connection.query(bill_sql, [user_id], function(err, userRatingResult){
+					        			connection.query(user_rating_sql, [user_id], function(err, userRatingResult){
 					        				if (err){
 					        					responses.sendError(res);
 					        					return;
 					        				} else {
 					        					var user_rating_text = 0;
 					        					for (var i = 0; i < userRatingResult.length; i++) {
-					        						user_rating_text = user_rating_text + userRatingResult[i].rating_count;
+					        						user_rating_text = user_rating_text + parseInt(userRatingResult[i].rating_count);
 					        					}
 					        					var user_rating_length = userRatingResult.length;
 					        					var user_rating_count  = user_rating_text / user_rating_length;
 
-					        					result[0]["password"] = "";
+					        					if ( userRatingResult.length == 0 ) {
+					        						user_rating_count = 0;
+					        					}
+
+					        					// result[0]["password"] = "";
+					        					console.log(result[0]);
 							        			var response = {
 							        				flag: 1,
 							        				response: {
@@ -699,13 +713,18 @@ exports.get_other_user_details = function(req, res) {
 		responses.parameterMissingResponse(res);
 		return;
 	} else {
-    	var user_id = result[0].user_id;
+    	// var user_id = result[0].user_id;
     	var sql = "SELECT * FROM `user` where `user_id`=? LIMIT 1";
     	connection.query(sql, [user_id], function(err, result) {
     		if (err) {
     			console.log(err);
     		} else {
-    			var revenue_sql = "SELECT * FROM `delivery` WHERE `delivered_to_id`=?";
+    			for (var i = 0; i < result.length; i++) {
+					if( result[i].profile_url != '' ) {
+						result[i].profile_url = 'user/'+result[i].profile_url;
+					}
+				}
+    			var revenue_sql = "SELECT * FROM `delivery` WHERE `delivered_by_id`=?";
     			connection.query(revenue_sql, [user_id], function(err, revenueResult){
     				if (err){
     					responses.sendError(res);
@@ -713,11 +732,11 @@ exports.get_other_user_details = function(req, res) {
     				} else {
     					var total_revenue = 0;
     					for (var i = 0; i < revenueResult.length; i++) {
-    						total_revenue = total_revenue + revenueResult[i].delivered_amount;
+    						total_revenue = total_revenue + parseInt(revenueResult[i].delivered_amount);
     					}
     					var order_count = revenueResult.length;
 
-    					var bill_sql = "SELECT * FROM `delivery` WHERE `delivered_by_id`=?";
+    					var bill_sql = "SELECT * FROM `delivery` WHERE `delivered_to_id`=?";
 	        			connection.query(bill_sql, [user_id], function(err, billResult){
 	        				if (err){
 	        					responses.sendError(res);
@@ -726,25 +745,29 @@ exports.get_other_user_details = function(req, res) {
 	        					var order_cost = 0;
 	        					var delivered_amount = 0;
 	        					for (var i = 0; i < billResult.length; i++) {
-	        						order_cost = order_cost + billResult[i].order_cost;
-	        						delivered_amount = delivered_amount + billResult[i].delivered_amount;
+	        						order_cost = order_cost + parseInt(billResult[i].order_cost);
+	        						delivered_amount = delivered_amount + parseInt(billResult[i].delivered_amount);
 	        					}
 	        					var total_bill_paid = order_cost + delivered_amount;
 
 	        					var user_rating_sql = "SELECT * FROM `user_rating` WHERE `user_rating_to_id`=?";
-			        			connection.query(bill_sql, [user_id], function(err, userRatingResult){
+			        			connection.query(user_rating_sql, [user_id], function(err, userRatingResult){
 			        				if (err){
 			        					responses.sendError(res);
 			        					return;
 			        				} else {
 			        					var user_rating_text = 0;
 			        					for (var i = 0; i < userRatingResult.length; i++) {
-			        						user_rating_text = user_rating_text + userRatingResult[i].rating_count;
+			        						user_rating_text = user_rating_text + parseInt(userRatingResult[i].rating_count);
 			        					}
 			        					var user_rating_length = userRatingResult.length;
 			        					var user_rating_count  = user_rating_text / user_rating_length;
 
-			        					result[0]["password"] = "";
+			        					if ( userRatingResult.length == 0 ) {
+			        						user_rating_count = 0;
+			        					}
+					        					
+			        					// result[0]["password"] = "";
 					        			var response = {
 					        				flag: 1,
 					        				response: {
@@ -772,17 +795,46 @@ exports.get_other_user_details = function(req, res) {
 
 exports.send_notification = function(req, res) {
 	var FCM = require('fcm-node');
-    var serverKey = 'AIzaSyCu8GfZf6kUv5EH0tSFoEwG_EZCy6ETCkI'; //put your server key here 
+    var serverKey = 'AAAAmiznu3M:APA91bHRQ7h0VbuTPBxf0JGguj-pxmBiCZKCyq0EOJBDa-PR-o16BpBJsCu-SbxzLrj26UNZ5n6LrMXo_AaCpHCyZ3xCAsXyxvsqN4MLy0FcIpEei6Siph0mSrvaVFLgHW_ckdrkcnMV'; //put your server key here 
     var fcm = new FCM(serverKey);
  
-    var message = { //this may vary according to the message type (single recipient, multicast, topic, et cetera) 
-        to: 'fV07R8qu_bo:APA91bHq8eEFt_LgOVs8p6RpWdmJGrjTt8bjZ23M85Cq47yEtoaE3PJwX-emSaMpXyTWTF6uYSiW83fxS-BSy87Y4', 
-        collapse_key: 'amir',
+    // var message = { //this may vary according to the message type (single recipient, multicast, topic, et cetera) 
+    //     to: 'eH75FLufVRI:APA91bGJQ0bS4qI978GV-LxOc4obyr5f0ceWZBUlGqfAfoZSSWnD0RnoBHZoCjs5gj4BlWlHzZ3L40QJbaattmtj_9tXc54Kcua01JZ62V7ADqx3L_IJJRhIn_dBow06N9Mbj0dgH5oH', 
+    //     collapse_key: 'otlbni',
         
+    //     notification: {
+    //         title: 'Title of your push notification', 
+    //         body: 'Body of your push notification' 
+    //     }
+    // };
+
+
+    var message = { //this may vary according to the message type (single recipient, multicast, topic, et cetera) 
+        to: 'eH75FLufVRI:APA91bGJQ0bS4qI978GV-LxOc4obyr5f0ceWZBUlGqfAfoZSSWnD0RnoBHZoCjs5gj4BlWlHzZ3L40QJbaattmtj_9tXc54Kcua01JZ62V7ADqx3L_IJJRhIn_dBow06N9Mbj0dgH5oH', 
+        collapse_key: 'otlbni',
+        // aps: {
+        // 	"title": 'OTLBNI',
+        // 	"alert": {
+	       //      notification_type: "1",
+	       //      notification_type_id: "1",
+	       //      access_token: "access_token"
+	       //  },
+        // 	"badge": 1,
+        // 	"sound":"default"
+        // }
         notification: {
-            title: 'Title of your push notification', 
-            body: 'Body of your push notification' 
-        }
+        	"title" : "Game Request",
+            "body" : "Bob wants to play poker",
+		    "aps" : {
+		        "alert" : {
+		            "data" : {
+                        "notification_type": "1",
+                        "notification_type_id": "order_id"
+                    }
+		        },
+		        "badge" : 5
+		    }
+		}
     };
     
     fcm.send(message, function(err, response){
@@ -795,7 +847,7 @@ exports.send_notification = function(req, res) {
 }
 
 exports.report_user = function(req, res) {
-	console.log(req.files.length);
+	console.log(req.files);
 	var access_token = req.body.access_token;
 	var report_to_id = req.body.report_to_id;
 	var report_type = req.body.report_type;
@@ -834,6 +886,7 @@ exports.report_user = function(req, res) {
 
                     	var file = req.files;
                     	for (var i = 0; i < file.length; i++) {
+                    		console.log(file);
                     		var report_gallery_unique_id = utils.generateRandomString();
 			                var report_gallery_id = md5(report_gallery_unique_id);
 			                var currentTime = new Date();
@@ -844,17 +897,18 @@ exports.report_user = function(req, res) {
 			                } else {
 			                	var file_image = "";
 			                }
-
-	                    	var sql = "INSERT INTO `report_gallery`(`report_gallery_id`, `report_id`, `report_image_url`, `created_on`) VALUES (?,?,?,?)";
-			                var value = [report_gallery_id, report_id, file_image, created_on];
-			                connection.query(sql, value, function (err, galleryResult) {
-			                	console.log(err);
-			                    if (err) {
-			                        responses.sendError(res);
-			                        return;
-			                    } else {
-			                    }
-			                });	
+			                if ( file[i] != undefined ) {
+		                    	var sql = "INSERT INTO `report_gallery`(`report_gallery_id`, `report_id`, `report_image_url`, `created_on`) VALUES (?,?,?,?)";
+				                var value = [report_gallery_id, report_id, file_image, created_on];
+				                connection.query(sql, value, function (err, galleryResult) {
+				                	console.log(err);
+				                    if (err) {
+				                        responses.sendError(res);
+				                        return;
+				                    } else {
+				                    }
+				                });	
+				            }
                     	}
                     	var response = {
                     		flag: 1,
@@ -877,6 +931,7 @@ exports.delivered = function(req, res) {
 	var order_id = req.body.order_id;
 	var delivered_amount = req.body.delivered_amount;
 	var order_cost = req.body.order_cost;
+	var offer_id = req.body.offer_id;
 
 	var manvalues = [access_token];
 	var checkblank = commonFunc.checkBlank(manvalues);
@@ -897,6 +952,7 @@ exports.delivered = function(req, res) {
 
 	        	var order_check = "SELECT * FROM `order_details` WHERE `order_id`=?";
 	        	connection.query(order_check, [order_id], function(err, billCheckResult){
+	        		console.log(billCheckResult);
 	        		if (err) {
 	        			responses.sendError(res);
 	        			return;
@@ -917,86 +973,122 @@ exports.delivered = function(req, res) {
 			                        responses.sendError(res);
 			                        return;
 			                    } else {
-			                    	var sql = "UPDATE `order_details` SET `status`='3' WHERE `order_id`=?";
-			                        connection.query(sql, [order_id], function(err, result) {
-			                            console.log(err);
+			                    	var sql = "UPDATE `offer` SET `status`='2' WHERE `offer_id`=?";
+			                        connection.query(sql, [offer_id], function(err, result) {
+			                            // console.log(err);
 			                            if (err) {
 			                                responses.sendError(res);
 			                                return;
 			                            } else {
-			                            	var user_sql = "SELECT * FROM `user` WHERE `user_id`=?";
-			                            	connection.query(user_sql, [user_id], function(err, userResult){
-			                            		if (err) {
-			                            			responses.sendError(res);
-			                            			return;
-			                            		} else {
-				                            		var account_balance = (delivered_amount * 20 ) / 100;
-				                            		var total_account_balance = account_balance + userResult[0].account_balance;
-					                            	var sql = "UPDATE `user` SET `account_balance`='"+total_account_balance+"' WHERE `user_id`=?";
-							                        connection.query(sql, [user_id], function(err, result) {
-							                            console.log(err);
-							                            if (err) {
-							                                responses.sendError(res);
-							                                return;
-							                            } else {
+					                    	var sql = "UPDATE `order_details` SET `status`='3' WHERE `order_id`=?";
+					                        connection.query(sql, [order_id], function(err, result) {
+					                            // console.log(err);
+					                            if (err) {
+					                                responses.sendError(res);
+					                                return;
+					                            } else {
+					                            	var user_sql = "SELECT * FROM `user` WHERE `user_id`=?";
+					                            	connection.query(user_sql, [delivered_by_id], function(err, userResult){
+					                            		if (err) {
+					                            			responses.sendError(res);
+					                            			return;
+					                            		} else {
+						                            		var account_balance = (delivered_amount * 20 ) / 100;
+						                            		if ( userResult[0].account_balance == '' ) {
+						                            			var acc = 0;
+						                            		} else {
+						                            			var acc = parseInt(userResult[0].account_balance);
+						                            		}
+						                            		var total_account_balance = parseInt(account_balance) + acc;
+							                            	var sql = "UPDATE `user` SET `account_balance`='"+total_account_balance+"' WHERE `user_id`=?";
+									                        connection.query(sql, [delivered_by_id], function(err, result) {
+									                            console.log(result);
+									                            if (err) {
+									                                responses.sendError(res);
+									                                return;
+									                            } else {
 
-							                            	var notification_unique_id = utils.generateRandomString();
-							                                var notification_id = md5(notification_unique_id);
-							                                var currentTime = new Date();
-							                                var created_on = Math.round(currentTime.getTime() / 1000);
-							                                var notification_type = "4";
-							                                var notification_text = "Your order is completed";
-							                                
-							                                var sql = "INSERT INTO `notification`(`notification_id`,`sender_id`, `receiver_id`, `notification_type`, `notification_text`, `notification_type_id`, `created_on`) VALUES (?,?,?,?,?,?,?)";
-							                                var value = [notification_id, delivered_by_id, delivered_to_id, notification_type, notification_text , order_id, created_on];
-							                                connection.query(sql, value, function (err, result) {
-							                                    console.log(err);
-							                                    if (err) {
-							                                        responses.sendError(res);
-							                                        return;
-							                                    } else {
-							                                        var serverKey = config.get('serverFCMKey'); //put your server key here 
-							                                        console.log(userResult[0].device_token);
-							                                        var fcm = new FCM(serverKey);
-							                                     
-							                                        var message = { //this may vary according to the message type (single recipient, multicast, topic, et cetera) 
-							                                            to: userResult[0].device_token, 
-							                                            collapse_key: 'otlbni',
-							                                            notification: {
-							                                                title: 'OTLBNI', 
-							                                                body:  notification_text
-							                                            },
-							                                            data: {
-							                                                notification_type: notification_type,
-							                                                notification_type_id: order_id,
-							                                                access_token: access_token
-							                                            }
-							                                        };
-							                                        
-							                                        fcm.send(message, function(err, response){
-							                                            if (err) {
-							                                                // return callback(0);
-							                                                console.log(err);
-							                                            } else {
-							                                                // return callback(1);
-							                                                console.log("jhj"+response);
-							                                            }
-							                                        });
+									                            	var notification_unique_id = utils.generateRandomString();
+									                                var notification_id = md5(notification_unique_id);
+									                                var currentTime = new Date();
+									                                var created_on = Math.round(currentTime.getTime() / 1000);
+									                                var notification_type = "4";
+									                                var notification_text = "Your order is completed";
+									                                
+									                                var sql = "INSERT INTO `notification`(`notification_id`,`sender_id`, `receiver_id`, `notification_type`, `notification_text`, `notification_type_id`, `created_on`) VALUES (?,?,?,?,?,?,?)";
+									                                var value = [notification_id, delivered_by_id, delivered_to_id, notification_type, notification_text , order_id, created_on];
+									                                connection.query(sql, value, function (err, result) {
+									                                    console.log(err);
+									                                    if (err) {
+									                                        responses.sendError(res);
+									                                        return;
+									                                    } else {
+									                                    	var FCM = require('fcm-node');
+									                                        var serverKey = config.get('serverFCMKey'); //put your server key here 
+									                                        console.log(userResult[0].device_token);
+									                                        var fcm = new FCM(serverKey);
+									                                     
+									                                     	if ( userResult[0].device_type == 1 ) {
+								                                            	var message = { //this may vary according to the message type (single recipient, multicast, topic, et cetera) 
+								                                                    to: userResult[0].device_token, 
+								                                                    collapse_key: 'otlbni',
+								                                                    notification: {
+																			        	"title" : "OTLBNI",
+																			            "body" : notification_text,
+																					    "aps" : {
+																					        "alert" : {
+																					            "data" : {
+																			                        "notification_type": notification_type,
+									                                                                "notification_type_id": order_id,
+									                                                                "access_token": access_token
+																			                    }
+																					        },
+																					        "badge" : 5
+																					    }
+																					}
+								                                                };
+								                                            } else {
+										                                        var message = { //this may vary according to the message type (single recipient, multicast, topic, et cetera) 
+										                                            to: userResult[0].device_token, 
+										                                            collapse_key: 'otlbni',
+										                                            notification: {
+										                                                title: 'OTLBNI', 
+										                                                body:  notification_text
+										                                            },
+										                                            data: {
+										                                                notification_type: notification_type,
+										                                                notification_type_id: order_id,
+										                                                access_token: access_token
+										                                            }
+										                                        };
+										                                    }
+									                                        
+									                                        fcm.send(message, function(err, response){
+									                                            if (err) {
+									                                                // return callback(0);
+									                                                console.log(err);
+									                                            } else {
+									                                                // return callback(1);
+									                                                console.log("jhj"+response);
+									                                            }
+									                                        });
 
-							                                        var response = {
-											                    		flag: 1,
-											                    		response: {},
-											                    		message: "Successfully delivered."
-											                    	}
-											                    	res.status(constants.responseFlags.ACTION_COMPLETE).json(response);
-							                                    }
-							                                });
-							                            }
-							                        });
+									                                        var response = {
+													                    		flag: 1,
+													                    		response: {},
+													                    		message: "Successfully delivered."
+													                    	}
+													                    	res.status(constants.responseFlags.ACTION_COMPLETE).json(response);
+									                                    }
+									                                });
+									                            }
+									                        });
+									                    }
+					                            	});
 							                    }
-			                            	});
-					                    }
-					                });
+							                });
+										}
+									});
 			                    }
 			                });
 	        			} else {
@@ -1036,29 +1128,47 @@ exports.user_feedback = function(req, res) {
 				res.status(constants.responseFlags.INVALID_ACCESS_TOKEN).json(response);
 				return;
 	        } else {
+	        	
 	        	var rating_by_id = result[0].user_id;
+	        	var check_user = "SELECT * FROM `user_rating` WHERE `user_rating_by_id`=? AND `user_rating_to_id`=? LIMIT 1";
+	        	connection.query(check_user, [rating_by_id, rating_to_id], function(err, checkResult){
+	        		if (err) {
+	        			responses.sendError(res);
+	        			return;
+	        		} else {
 
-	        	var rating_unique_id = utils.generateRandomString();
-                var rating_id = md5(rating_unique_id);
-                var currentTime = new Date();
-                var created_on = Math.round(currentTime.getTime() / 1000);
+	        			if ( checkResult.length > 0 ) {
+	        				var response = {
+	        					flag: 5,
+	        					response: {},
+	        					message: "You have already rated to this person"
+	        				}
+	        				res.status(constants.responseFlags.ACTION_COMPLETE).json(response);
+	        			} else {
+		        			var rating_unique_id = utils.generateRandomString();
+			                var rating_id = md5(rating_unique_id);
+			                var currentTime = new Date();
+			                var created_on = Math.round(currentTime.getTime() / 1000);
 
-                var sql = "INSERT INTO `user_rating`(`rating_id`, `user_rating_by_id`, `user_rating_to_id`, `rating_count`, `rating_comment`, `created_on`) VALUES (?,?,?,?,?,?)";
-                var value = [rating_id, rating_by_id, rating_to_id, rating_count, rating_comment, created_on];
-                connection.query(sql, value, function (err, result) {
-                	console.log(err);
-                    if (err) {
-                        responses.sendError(res);
-                        return;
-                    } else {
-                    	var response = {
-                    		flag: 1,
-                    		response: {},
-                    		message: "Successfully send facebook."
-                    	}
-                    	res.status(constants.responseFlags.ACTION_COMPLETE).json(response);
-                    }
-                });
+			                var sql = "INSERT INTO `user_rating`(`rating_id`, `user_rating_by_id`, `user_rating_to_id`, `rating_count`, `rating_comment`, `created_on`) VALUES (?,?,?,?,?,?)";
+			                var value = [rating_id, rating_by_id, rating_to_id, rating_count, rating_comment, created_on];
+			                connection.query(sql, value, function (err, result) {
+			                	console.log(err);
+			                    if (err) {
+			                        responses.sendError(res);
+			                        return;
+			                    } else {
+			                    	var response = {
+			                    		flag: 1,
+			                    		response: {},
+			                    		message: "Successfully send feedback."
+			                    	}
+			                    	res.status(constants.responseFlags.ACTION_COMPLETE).json(response);
+			                    }
+			                });
+			            }
+	        		}
+	        	});
 	        }
 	    });
 	}
@@ -1068,8 +1178,10 @@ exports.create_bill = function(req, res) {
 	var access_token = req.body.access_token;
 	var order_cost = req.body.order_cost;
 	var order_id = req.body.order_id;
+	var delivered_amount = req.body.delivered_amount;
+	var order_created_by_id =  req.body.created_by_id;
 
-	var manvalues = [access_token, order_cost, order_id];
+	var manvalues = [access_token, order_cost, order_id, delivered_amount, order_created_by_id];
 	var checkblank = commonFunc.checkBlank(manvalues);
 	if (checkblank == 1) {
 		responses.parameterMissingResponse(res);
@@ -1091,12 +1203,46 @@ exports.create_bill = function(req, res) {
 					if (err) {
 						console.log(err);
 					} else {
-						var response = {
-							flag: 1,
-							response: {},
-							message: "Bill created successfully."	
-						};
-						res.status(constants.responseFlags.ACTION_COMPLETE).json(response);
+
+						var message_unique_id = order_id;
+					    var message_to_id = order_created_by_id;
+					    var message_type = "1";
+					    var message_body = "You bill hase been created: Delivery Amount - "+delivered_amount+", Order Cost - "+order_cost+"";
+					 
+		                var sender_id = user_id;
+		                var receiver_id = message_to_id;
+
+		                var message_unique_idd = utils.generateRandomString();
+		                var message_id = md5(message_unique_idd);
+		                var currentTime = new Date();
+		                var created_on = Math.round(currentTime.getTime() / 1000);
+		                var user_type = "1";
+
+		                if ( req.file != undefined ) { 
+		                    message_body = req.file.filename;
+		                }
+
+		                var sql = "INSERT INTO `message`(`message_id`, `sender_id`, `receiver_id`, `message_type`, `message_body`, `created_on`, `user_type`, `message_unique_id`) VALUES (?,?,?,?,?,?,?,?)";
+		                var value = [message_id, sender_id, receiver_id, message_type, message_body, created_on, user_type, message_unique_id];
+		                connection.query(sql, value, function (err, result) {
+		                    if (err) {
+		                        responses.sendError(res);
+		                        return;
+		                    } else {
+		                        // var response = {
+		                        //     flag: 1,
+		                        //     response: {},
+		                        //     message: "Successfully send message."
+		                        // }
+		                        // res.status(constants.responseFlags.ACTION_COMPLETE).json(response);
+		                        var response = {
+									flag: 1,
+									response: {},
+									message: "Bill created successfully."	
+								};
+								res.status(constants.responseFlags.ACTION_COMPLETE).json(response);
+		                    }
+		                });
 					}
 				});
 	        }
@@ -1114,18 +1260,53 @@ exports.user_feedback_list = function(req, res) {
 		return;
 	} else {
   		var rating_sql = "SELECT * FROM `user_rating` WHERE `user_rating_to_id`=?"
-		connection.query(sql, [user_id], function (err, result) {
+		connection.query(rating_sql, [user_id], function (err, result) {
+			console.log(result);
         	console.log(err);
             if (err) {
                 responses.sendError(res);
                 return;
             } else {
-            	var response = {
-            		flag: 1,
-            		response: result,
-            		message: "Successfully data fetched."
-            	}
-            	res.status(constants.responseFlags.ACTION_COMPLETE).json(response);
+
+            	if (result.length == 0 ) {
+            		var response = {
+            			flag: 5,
+            			response: {},
+            			message: "No Data Found"
+            		}
+            		res.status(constants.responseFlags.ACTION_COMPLETE).json(response);
+            	} else {
+	            	var user_rating_array = [];
+	            	for (var i = 0; i < result.length; i++) {
+	            		user_rating_array.push(result[i].user_rating_to_id);
+	            	}
+
+	        		var user_sql = "SELECT `user_name`, `profile_url` FROM `user` WHERE `user_id` IN (?)";
+	        		connection.query(user_sql, [user_rating_array], function(err, userRatingResult){
+	        			if (err){
+	        				responses.sendError(res);
+	        				return;
+	        			} else {
+	        				for (var j = 0; j < userRatingResult.length; j++) {
+        						if (userRatingResult[j].profile_url != ''){
+        							userRatingResult[j].profile_url = "/user/"+userRatingResult[j].profile_url;
+        						}
+        					}
+
+	        				for (var i = 0; i < result.length; i++) {
+	        					for (var j = 0; j < userRatingResult.length; j++) {
+	        						result[i]["user_details"] = userRatingResult[j];
+	        					}
+	        				}
+	        				var response = {
+			            		flag: 1,
+			            		response: result,
+			            		message: "Successfully data fetched."
+			            	}
+			            	res.status(constants.responseFlags.ACTION_COMPLETE).json(response);
+	        			}
+	        		});
+	        	}
             }
         });
 	}

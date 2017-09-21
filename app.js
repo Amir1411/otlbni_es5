@@ -105,11 +105,24 @@ var storageReport = multer.diskStorage({
     }
 });
 
+var storageMsg = multer.diskStorage({
+    destination: function(req, file, callback) {
+        // console.log(file);
+        callback(null, './uploads/message');
+    },
+    filename: function(req, file, callback) {
+        // console.log(file);
+        var fileUniqueName = md5(Date.now());
+        callback(null,  fileUniqueName + path.extname(file.originalname));
+    }
+});
+
 var upload = multer({ storage: storage });
 var uploadOrder = multer({ storage: storageOrder });
 var uploadAdmin = multer({ storage: storageAdmin });
 var uploadAdminBrand = multer({ storage: storageAdminBrand });
 var uploadReport = multer({ storage: storageReport });
+var uploadMsg = multer({ storage: storageMsg });
 
 // all environments=
 app.use(express.static(path.join(__dirname, 'uploads')));
@@ -196,6 +209,7 @@ app.post('/get_search_list', places_panel.get_search_list);
 app.post('/create_order', uploadOrder.single('order_image'), order_panel.create_order);
 app.post('/pending_order', order_panel.pending_order);
 app.post('/my_order', order_panel.my_order);
+app.post('/my_delivered_order', order_panel.my_delivered_order);
 app.post('/cancel_order', order_panel.cancel_order);
 
 app.post('/getNotificationDetails', order_panel.getNotificationDetails);
@@ -208,7 +222,7 @@ app.post('/get_user_notification_list', notification.get_user_notification_list)
 
 // ....................... Send Message API ..........................
 
-app.post('/send_message', user_message.send_message);
+app.post('/send_message', uploadMsg.single('image'), user_message.send_message);
 app.post('/get_message', user_message.get_message);
 
 // ....................... Admin Panel API ..........................
