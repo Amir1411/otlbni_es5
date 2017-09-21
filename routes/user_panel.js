@@ -1111,8 +1111,9 @@ exports.user_feedback = function(req, res) {
 	var rating_to_id = req.body.rating_to_id;
 	var rating_count = req.body.rating_count;
 	var rating_comment = req.body.rating_comment;
+	var order_id = req.body.order_id;
 
-	var manvalues = [access_token, rating_to_id, rating_count, rating_comment];
+	var manvalues = [access_token, rating_to_id, rating_count];
 	var checkblank = commonFunc.checkBlank(manvalues);
 	if (checkblank == 1) {
 		responses.parameterMissingResponse(res);
@@ -1130,8 +1131,8 @@ exports.user_feedback = function(req, res) {
 	        } else {
 	        	
 	        	var rating_by_id = result[0].user_id;
-	        	var check_user = "SELECT * FROM `user_rating` WHERE `user_rating_by_id`=? AND `user_rating_to_id`=? LIMIT 1";
-	        	connection.query(check_user, [rating_by_id, rating_to_id], function(err, checkResult){
+	        	var check_user = "SELECT * FROM `user_rating` WHERE `user_rating_by_id`=? AND `user_rating_to_id`=? AND `order_id`=? LIMIT 1";
+	        	connection.query(check_user, [rating_by_id, rating_to_id, order_id], function(err, checkResult){
 	        		if (err) {
 	        			responses.sendError(res);
 	        			return;
@@ -1150,8 +1151,8 @@ exports.user_feedback = function(req, res) {
 			                var currentTime = new Date();
 			                var created_on = Math.round(currentTime.getTime() / 1000);
 
-			                var sql = "INSERT INTO `user_rating`(`rating_id`, `user_rating_by_id`, `user_rating_to_id`, `rating_count`, `rating_comment`, `created_on`) VALUES (?,?,?,?,?,?)";
-			                var value = [rating_id, rating_by_id, rating_to_id, rating_count, rating_comment, created_on];
+			                var sql = "INSERT INTO `user_rating`(`rating_id`, `user_rating_by_id`, `user_rating_to_id`, `rating_count`, `rating_comment`, `order_id`, `created_on`) VALUES (?,?,?,?,?,?,?)";
+			                var value = [rating_id, rating_by_id, rating_to_id, rating_count, rating_comment, order_id, created_on];
 			                connection.query(sql, value, function (err, result) {
 			                	console.log(err);
 			                    if (err) {

@@ -705,7 +705,7 @@ function get_delivered_offer_details(user_id, req, res, callback) {
                     get_myorder_place(orderResult, function(placeDetails){
 
                         if(userByArray.length > 0){
-                            var my_order_url = "SELECT `user_name`, `profile_url` FROM `user` WHERE `user_id` IN(?)";
+                            var my_order_url = "SELECT `user_id`, `user_name`, `profile_url` FROM `user` WHERE `user_id` IN(?)";
                             connection.query(my_order_url, [userByArray], function(err, userResult) {
                                 if (err) {
                                     console.log(err);
@@ -717,15 +717,21 @@ function get_delivered_offer_details(user_id, req, res, callback) {
                                             userResult[i].profile_url = "user/"+userResult[i].profile_url;
                                         }
                                     }
+                                    // console.log(userResult);
                                     for (var k = 0; k < result.length; k++) {
                                         for (var j = 0; j < userResult.length; j++) {
                                             for (var l = 0; l < placeDetails.length; l++) {
                                                 for (var m = 0; m < orderResult.length; m++) {
-                                                    if ( result[k].created_by_id == "" ) {
-                                                        result[k]["user_details"] = {};
-                                                    } else {
-                                                        result[k]["user_details"] = userResult[j];
+                                                    // console.log("offeruser"+result[k].offer_created_to_id);
+                                                    // console.log("user"+userResult[j].user_id);
+                                                    if ( result[k].offer_created_to_id == userResult[j].user_id ) {
+                                                        // if ( result[k].offer_created_by_id == "" ) {
+                                                        //     result[k]["user_details"] = {};
+                                                        // } else {
+                                                            result[k]["user_details"] = userResult[j];
+                                                        // }
                                                     }
+
                                                     if ( result[k].order_id == orderResult[m].order_id ) {
                                                         result[k]["order_details"] = orderResult[m]; 
                                                     }
@@ -869,7 +875,7 @@ function create_order (access_token,order_id, order_number, user_id, user_id, pl
                                             return;
                                         } else {
                                             var serverKey = config.get('serverFCMKey'); //put your server key here 
-                                            // console.log(userResult[i].device_token);
+                                            console.log(userResult[i].device_token);
                                             var fcm = new FCM(serverKey);
                                          
                                          	if ( userResult[i].device_type == 1 ) {
@@ -1127,9 +1133,17 @@ exports.getNotificationDetails = function(req, res) {
                                                             }
                                                         }
 
-            				                            var user_offer_sql = "SELECT * FROM `offer` WHERE `order_id`=? AND `offer_created_to_id`=? OR `offer_created_by_id`=?";
-            							                connection.query(user_offer_sql, [notification_type_id, sender_id, sender_id], function(err, user_offer_result) {
-            							                	
+                                                        if ( orderDetails[0].created_by_id == sender_id ) {
+                                                            var send_id = sender_id;
+                                                            var send_text = "offer_created_to_id";
+                                                        } else {
+                                                            var send_id = sender_id;
+                                                            var send_text = "offer_created_by_id";
+                                                        }
+
+            				                            var user_offer_sql = "SELECT * FROM `offer` WHERE `order_id`=? AND "+send_text+"=?";
+            							                connection.query(user_offer_sql, [notification_type_id, send_id], function(err, user_offer_result) {
+            							                	console.log(user_offer_result);
             						                        if (err) {
             						                            responses.sendError(res);
             						                            return;
