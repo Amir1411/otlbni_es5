@@ -37,7 +37,10 @@ exports.send_bulk_message = function(sender_id, receiver_id, order_id, delivery_
         } else {
             var order_description = orderResult[0].order_description;
             var order_lat_long = orderResult[0].lattitude+','+orderResult[0].longitude;
-            var delivery_msg = "Delivery Cost: "+delivery_amount+" Delivery within: "+delivery_time+" Away: "+delivery_distance; 
+            var delivery_msg = "Order Details :- "+
+            				   "\nDelivery Cost: "+delivery_amount+
+                               "\nDelivery within: "+delivery_time+
+                               "\nAway: "+delivery_distance; 
             
             var message_sql = "INSERT INTO `message` (`message_id`, `sender_id`, `receiver_id`, `message_body`, `message_type`, `message_unique_id`, `created_on`) VALUES ?";
             var values = [

@@ -33,7 +33,7 @@ exports.social_login = function(req, res) {
 				var access_token = md5(utils.generateRandomString());
 				var mobile_number = response[0].mobile_number;
 
-				var update_otp = "UPDATE `user` SET `verification_code`="+otp+", `access_token`='"+access_token+"' WHERE `user_id`=?";
+				var update_otp = "UPDATE `user` SET `verification_code`="+otp+", `access_token`='"+access_token+"', `device_token`='"+device_token+"' WHERE `user_id`=?";
 				connection.query(update_otp, [response[0].user_id], function(err, result){
 					// var username = response[0].user_name;
 					console.log(mobile_number);
@@ -184,7 +184,7 @@ exports.verify_user = function(req, res) {
 
 exports.logout = function(req, res) {
 	var access_token = req.body.access_token;
-	var update_otp = "UPDATE `user` SET `access_token`= '' WHERE `access_token`=?";
+	var update_otp = "UPDATE `user` SET `access_token`= '', `device_token`= '' WHERE `access_token`=?";
 	connection.query(update_otp, access_token, function(err, result){
 		if (err) {
 			console.log(err);
@@ -274,9 +274,6 @@ exports.login = function(req, res) {
 		// console.log(encrypted_pass);
 		var sql = "SELECT * FROM `user` WHERE `mobile_number`=? LIMIT 1";
 		connection.query(sql, [mobile_number], function(err, result_check) {
-			console.log(err);
-			console.log(result_check);
-			console.log(result_check.length);
 			if (err) {
 				responses.sendError(res);
 				return;
@@ -285,7 +282,7 @@ exports.login = function(req, res) {
 					var response = {
 						"flag": 1,
 						"response": {},
-						"message": "This mobile number is not register with us. Please signup"			
+						"message": "Your number is not register yet, so we are forwarding you for signup."			
 					};
 					res.status(constants.responseFlags.INVALID_MOBILE_NUMBER).json(response);
 					return;
@@ -1040,7 +1037,8 @@ exports.delivered = function(req, res) {
 																					            "data" : {
 																			                        "notification_type": notification_type,
 									                                                                "notification_type_id": order_id,
-									                                                                "access_token": access_token
+									                                                                "access_token": access_token,
+                                                                        							"notification_id": notification_id
 																			                    }
 																					        },
 																					        "badge" : 5
@@ -1058,7 +1056,8 @@ exports.delivered = function(req, res) {
 										                                            data: {
 										                                                notification_type: notification_type,
 										                                                notification_type_id: order_id,
-										                                                access_token: access_token
+										                                                access_token: access_token,
+                                                                        				notification_id: notification_id
 										                                            }
 										                                        };
 										                                    }
@@ -1205,45 +1204,55 @@ exports.create_bill = function(req, res) {
 						console.log(err);
 					} else {
 
-						var message_unique_id = order_id;
-					    var message_to_id = order_created_by_id;
-					    var message_type = "1";
-					    var message_body = "You bill hase been created: Delivery Amount - "+delivered_amount+", Order Cost - "+order_cost+"";
-					 
-		                var sender_id = user_id;
-		                var receiver_id = message_to_id;
+						var update_offer_cost = "UPDATE `offer` SET `amount`= '"+delivered_amount+"' WHERE `offer_created_to_id`=? AND `offer_created_by_id`=? AND `order_id`=?";
+						connection.query(update_offer_cost, [order_created_by_id, user_id, order_id], function(err, offerUpdateResult){
+							if (err) {
+								console.log(err);
+							} else {
 
-		                var message_unique_idd = utils.generateRandomString();
-		                var message_id = md5(message_unique_idd);
-		                var currentTime = new Date();
-		                var created_on = Math.round(currentTime.getTime() / 1000);
-		                var user_type = "1";
+								var message_unique_id = order_id;
+							    var message_to_id = order_created_by_id;
+							    var message_type = "1";
+							    var message_body = "You bill has been created :-"+
+							    				   "\nDelivery Amount - "+delivered_amount+
+							    				   "\nOrder Cost - "+order_cost+"";
+							 
+				                var sender_id = user_id;
+				                var receiver_id = message_to_id;
 
-		                if ( req.file != undefined ) { 
-		                    message_body = req.file.filename;
-		                }
+				                var message_unique_idd = utils.generateRandomString();
+				                var message_id = md5(message_unique_idd);
+				                var currentTime = new Date();
+				                var created_on = Math.round(currentTime.getTime() / 1000);
+				                var user_type = "1";
 
-		                var sql = "INSERT INTO `message`(`message_id`, `sender_id`, `receiver_id`, `message_type`, `message_body`, `created_on`, `user_type`, `message_unique_id`) VALUES (?,?,?,?,?,?,?,?)";
-		                var value = [message_id, sender_id, receiver_id, message_type, message_body, created_on, user_type, message_unique_id];
-		                connection.query(sql, value, function (err, result) {
-		                    if (err) {
-		                        responses.sendError(res);
-		                        return;
-		                    } else {
-		                        // var response = {
-		                        //     flag: 1,
-		                        //     response: {},
-		                        //     message: "Successfully send message."
-		                        // }
-		                        // res.status(constants.responseFlags.ACTION_COMPLETE).json(response);
-		                        var response = {
-									flag: 1,
-									response: {},
-									message: "Bill created successfully."	
-								};
-								res.status(constants.responseFlags.ACTION_COMPLETE).json(response);
-		                    }
-		                });
+				                if ( req.file != undefined ) { 
+				                    message_body = req.file.filename;
+				                }
+
+				                var sql = "INSERT INTO `message`(`message_id`, `sender_id`, `receiver_id`, `message_type`, `message_body`, `created_on`, `user_type`, `message_unique_id`) VALUES (?,?,?,?,?,?,?,?)";
+				                var value = [message_id, sender_id, receiver_id, message_type, message_body, created_on, user_type, message_unique_id];
+				                connection.query(sql, value, function (err, result) {
+				                    if (err) {
+				                        responses.sendError(res);
+				                        return;
+				                    } else {
+				                        // var response = {
+				                        //     flag: 1,
+				                        //     response: {},
+				                        //     message: "Successfully send message."
+				                        // }
+				                        // res.status(constants.responseFlags.ACTION_COMPLETE).json(response);
+				                        var response = {
+											flag: 1,
+											response: {},
+											message: "Bill created successfully."	
+										};
+										res.status(constants.responseFlags.ACTION_COMPLETE).json(response);
+				                    }
+				                });
+				            }
+				        });
 					}
 				});
 	        }
@@ -1279,7 +1288,7 @@ exports.user_feedback_list = function(req, res) {
             	} else {
 	            	var user_rating_array = [];
 	            	for (var i = 0; i < result.length; i++) {
-	            		user_rating_array.push(result[i].user_rating_to_id);
+	            		user_rating_array.push(result[i].user_rating_by_id);
 	            	}
 
 	        		var user_sql = "SELECT `user_name`, `profile_url` FROM `user` WHERE `user_id` IN (?)";

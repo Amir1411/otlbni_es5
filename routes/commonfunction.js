@@ -644,6 +644,7 @@ exports.calculateDistance=function(lat1, long1, lat2, long2)
     var to = [{lat: lat2, lng: long2}];
 
     var result = dist.getDistance(from, to, 'asc', 'metres', 2);
+    console.log(result[0].distance);
     return result[0].distance;
 };
 
