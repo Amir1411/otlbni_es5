@@ -74,7 +74,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 	border-radius: 2px;
 }
 
-.btn-default {
+.btn-default, .btn-success {
     box-shadow: 0 2px 2px 0 rgba(0,0,0,.14), 0 3px 1px -2px rgba(0,0,0,.2), 0 1px 5px 0 rgba(0,0,0,.12);
 	border-radius: 2px;
 }
@@ -115,11 +115,16 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 }
 
 .status {
-    color: #fff;
+    /*color: #fff;
     text-align: center;
     width: 40%;
         margin: auto;
-    padding: 2px 0px;
+    padding: 2px 0px;*/
+    color: #fff;
+    text-align: center;
+    margin: auto;
+    padding: 3px 8px;
+    display: inline;
 }
 .status.active {
     background: #27c24c;
@@ -127,6 +132,17 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 .status.offline {
     background: #808080;
 }
+
+.status.ontheway {
+    background: #ffb400;
+}
+.status.cancelled {
+    background: red;
+}
+.status.reject {
+	background: blue;
+}
+
 .dataTables_empty {
     text-align: center;
 }
@@ -167,3 +183,70 @@ table.dataTable thead .sorting:before, table.dataTable thead .sorting_asc:before
     margin: 0px 2px;
 }
 .btn-test-link:hover {color: #000;}
+
+.panel {
+    margin-bottom: 18px;
+    background-color: #fff;
+    border: 1px solid transparent;
+    border-radius: 3px;
+    -webkit-box-shadow: 0 1px 1px rgba(0, 0, 0, .05);
+    box-shadow: 0 1px 1px rgba(0, 0, 0, .05);
+}
+
+.panel-default {
+    border: 1px solid #dcdcdc;
+    border-top: 1px solid #dcdcdc;
+}
+
+.panel-heading {
+    padding: 12px 15px;
+    border-bottom: 1px solid transparent;
+    border-top-right-radius: 2px;
+    border-top-left-radius: 2px;
+}
+
+.panel .panel-heading {
+    position: relative;
+}
+
+.panel-default .panel-heading {
+    color: #4c4d5a;
+    border-color: #dcdcdc;
+    background: #f6f6f6;
+    text-shadow: 0 -1px 0 rgba(50,50,50,0);
+}
+
+.panel-title {
+    margin-top: 0;
+    margin-bottom: 0;
+    font-size: 15px;
+    color: inherit;
+}
+
+.panel-heading h3 {
+    font-weight: 500;
+    display: inline-block;
+}
+
+.panel-heading h3 i {
+    margin-right: 5px;
+    -webkit-tap-highlight-color: rgba(0,0,0,0);
+}
+.panel-body {
+    padding: 15px;
+}
+
+.productPage .form-horizontal .form-group {margin: 0px;}
+.productPage .title-bar {background: none; border: 0;}
+
+.btn-default {background: #008cff;}
+/*.layout-content-body {
+    padding: 15px 15px 35px 30px;
+}*/
+@media (max-width: 1490px) {
+	.userTableOverflow {width: 61%;}
+}
+
+.dashboardPage .card-wrap {
+    padding: 27px 10px 20px;
+}

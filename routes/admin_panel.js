@@ -14,6 +14,7 @@ var messenger = require('./messenger');
 var path = require('path');
 var multer = require('multer');
 var EmailModule = require('./EmailModule');
+var async = require('async');
 
 exports.logout = function(req, res) {
 	var access_token = req.body.access_token;
@@ -210,10 +211,7 @@ exports.change_password = function(req, res) {
 }
 
 exports.update_thumbnail = function(req, res) {
-	console.log(req.body);
-	console.log(req.file);
 	var access_token = req.body.access_token;
-	console.log(access_token);
 	utils.authenticateAdminAccessToken(access_token, function(result) {
         if (result == 0) {
              var response = {
@@ -285,29 +283,116 @@ exports.userlist = function(req, res) {
 						responses.sendError(res);
 						return;
 					} else {
-						// result[0].password = '';
-						// if ( result[0]["profile_url"] != "" ) {
-						// 	result[0]["profile_url"] = "admin/"+result[0]["profile_url"];
-						// }
-						for (var i = 0; i < result.length; i++) {
+						var orderArray = [];
+						var length = result.length;
+						for (var i in result) {
 							result[i]["password"] = '';
 							result[i]["count"] = i+1;
 							if ( result[i]["profile_url"] != "" ) {
 								result[i]["profile_url"] = "user/"+result[i]["profile_url"];
 							}
+							if ( result[i]["account_balance"] == "" ) {
+								result[i]["account_balance"] = "0";
+							}
+							getOrderCount(result[i], function(results){
+								// console.log(results);
+								if( 0 === --length ) {
+									getResponse(result, res);
+								}
+							});
 						}
-						var response = {
-							status: constants.responseFlags.ACTION_COMPLETE,
-							flag: 1,
-							response: result,
-							message: "Get user Details"
-						}
-						res.send(JSON.stringify(response));
+
 					}
 				});
 			}
 		});
 	}
+}
+
+function getOrderCount(result, callback){
+	var order_sql = "SELECT * FROM `order_details` WHERE `created_by_id`=?";
+	connection.query(order_sql, [result.user_id], function(err, count){
+		if (err){
+
+		} else {
+			var offer_by_sql = "SELECT * FROM `offer` WHERE `offer_created_by_id`=?";
+			connection.query(offer_by_sql, [result.user_id], function(err, offerByCount){
+				if (err){
+
+				} else {
+
+					var offer_to_sql = "SELECT * FROM `offer` WHERE `offer_created_to_id`=?";
+					connection.query(offer_to_sql, [result.user_id], function(err, offerToCount){
+						if (err){
+
+						} else {
+
+							var user_rating_sql = "SELECT * FROM `user_rating` WHERE `user_rating_to_id`=?";
+							connection.query(user_rating_sql, [result.user_id], function(err, userRatingResult){
+								if (err){
+
+								} else {
+
+									var user_rating_text = 0;
+		        					for (var i = 0; i < userRatingResult.length; i++) {
+		        						user_rating_text = user_rating_text + parseInt(userRatingResult[i].rating_count);
+		        					}
+		        					var user_rating_length = userRatingResult.length;
+		        					var user_rating_count  = user_rating_text / user_rating_length;
+
+		        					if ( userRatingResult.length == 0 ) {
+		        						result.average_rating = 0;
+		        					} else {
+		        						result.average_rating = user_rating_count;
+		        					}
+
+									if ( offerToCount.length > 0 ) {
+										var offer_to_amount = 0;
+										for (var i = 0; i < offerToCount.length; i++) {
+											if (offerToCount[i].status == 3) {
+												if (offerToCount[i].offer_created_to_id == result.user_id) {
+													offer_to_amount = offer_to_amount+parseInt(offerToCount[i].amount); 
+												} 
+											}
+										}
+										result.total_paid = offer_to_amount;
+									} else {
+										result.total_paid = 0;
+									}
+									if ( offerByCount.length > 0 ) {
+										var offer_amount = 0;
+										for (var i = 0; i < offerByCount.length; i++) {
+											if (offerByCount[i].status == 3) {
+												if (offerByCount[i].offer_created_by_id == result.user_id) {
+													offer_amount = offer_amount+parseInt(offerByCount[i].amount); 
+												}
+											}
+										}
+										result.total_revenue = offer_amount;
+									} else {
+										result.total_revenue = 0;
+									}
+									result.total_order_created_count = count.length;
+									result.total_offer_created_count = offerByCount.length;
+									callback(result);
+								}
+							});
+						}
+					});
+				}
+			});
+		}
+	});
+}
+
+function getResponse (result, res) {
+	var response = {
+		status: constants.responseFlags.ACTION_COMPLETE,
+		flag: 1,
+		response: result,
+		message: "Get user Details"
+	}
+	res.send(JSON.stringify(response));
 }
 
 exports.block_unblock_user = function(req, res) {
@@ -650,4 +735,417 @@ exports.check_verification_token =  function(req, res) {
         res.send(JSON.stringify(response));
         return;
     })
+}
+
+exports.getAdminOrder = function(req, res) {
+	var access_token =  req.body.access_token;
+	var status =  req.body.status;
+	var manvalues = [access_token];
+	var checkblank = commonFunc.checkBlank(manvalues);
+	if (checkblank == 1) {
+		responses.parameterMissingResponse(res);
+		return;
+	} else {
+		utils.authenticateAdminAccessToken(access_token, function(result) {
+			if (result == 0) {
+				var response = {
+					status: constants.responseFlags.INVALID_ACCESS_TOKEN,
+					flag: 1,
+					response: {},
+					message: "Invalid access token."    
+				};
+				res.send(JSON.stringify(response));
+				return; 
+			} else {
+				var admin_id = result[0].admin_id;
+				var sql = "SELECT * FROM `order_details` WHERE `status`=?";
+				connection.query(sql, [status], function(err, result) {
+					if (err) {
+						responses.sendError(res);
+						return;
+					} else if ( result.length > 0 ) {
+						get_place_detail(result, function(places){
+							var response = {
+								status: constants.responseFlags.ACTION_COMPLETE,
+								flag: 1,
+								response: result,
+								message: "Order list details"
+							}
+							res.send(response);
+						});
+					} else {
+						var response = {
+							status: constants.responseFlags.ACTION_COMPLETE,
+							flag: 1,
+							response: {},
+							message: "No details found."
+						};
+						res.send(response);
+					}
+				});	
+			}
+		});
+	}
+}
+
+exports.getAllAdminOrder = function(req, res) {
+	var access_token =  req.body.access_token;
+	var manvalues = [access_token];
+	var checkblank = commonFunc.checkBlank(manvalues);
+	if (checkblank == 1) {
+		responses.parameterMissingResponse(res);
+		return;
+	} else {
+		utils.authenticateAdminAccessToken(access_token, function(result) {
+			if (result == 0) {
+				var response = {
+					status: constants.responseFlags.INVALID_ACCESS_TOKEN,
+					flag: 1,
+					response: {},
+					message: "Invalid access token."    
+				};
+				res.send(JSON.stringify(response));
+				return; 
+			} else {
+				var admin_id = result[0].admin_id;
+				var sql = "SELECT * FROM `order_details`";
+				connection.query(sql, [], function(err, result) {
+					if (err) {
+						responses.sendError(res);
+						return;
+					} else if ( result.length > 0 ) {
+						get_place_detail(result, function(places){
+							var response = {
+								status: constants.responseFlags.ACTION_COMPLETE,
+								flag: 1,
+								response: result,
+								message: "Order list details"
+							}
+							res.send(response);
+						});
+					} else {
+						var response = {
+							status: constants.responseFlags.NO_RESULT_FOUND,
+							flag: 1,
+							response: {},
+							message: "No details found."
+						};
+						res.send(JSON.stringify(response));
+					}
+				});	
+			}
+		});
+	}
+}
+
+/*** For Dashboard***/ 
+exports.dashboard_report = function (req, res) {
+	res.header("Access-Control-Allow-Origin", "*");
+	var access_token = req.body.access_token;
+	var start_time = req.body.start_time;
+	var end_time = req.body.end_time;
+
+	var manvalues = [access_token];
+	var checkblank = commonFunc.checkBlank(manvalues);
+	if (checkblank == 1) {
+		responses.parameterMissingResponse(res);
+		return;
+	} else {
+		utils.authenticateAdminAccessToken(access_token, function (result) {
+			if (result == 0) {
+				responses.sendError(res);
+				return;
+			} else {
+				async.parallel([
+					// calling total earning and rides function
+					function(callback) {
+						total_order(req,res,function(total_order_result){
+							callback(null,total_order_result)
+						});
+					},
+					// calling total earning and rides function
+					function(callback) {
+						total_today_order(start_time,end_time,req,res,function(total_today_order_result){
+							callback(null,total_today_order_result)
+						});
+					},
+					//calling total users function
+					function(callback) {
+						total_users(req,res,function(total_users_result){
+							callback(null,total_users_result)
+						});
+					},
+					//calling total users for today function
+					function(callback) {
+						total_users_registered_today(start_time,end_time,req,res,function(total_users_today_result){
+							callback(null,total_users_today_result)
+						});
+					},
+					//calling total users function
+					function(callback) {
+						total_offers(req,res,function(total_offers_result){
+							callback(null,total_offers_result)
+						});
+					},
+					//calling total users for today function
+					function(callback) {
+						total_offers_today(start_time,end_time,req,res,function(total_offers_today_result){
+							callback(null,total_offers_today_result)
+						});
+					},
+					//calling total users for today function
+					function(callback) {
+						total_earnings(req,res,function(total_earnings_today_result){
+							callback(null,total_earnings_today_result)
+						});
+					},
+					function(callback) {
+						total_reports(req,res,function(total_reports_result){
+							callback(null,total_reports_result)
+						});
+					},
+					// calling total users for today function
+					function(callback) {
+						total_unresolved_reports(req,res,function(total_unresolved_reports_result){
+							callback(null,total_unresolved_reports_result)
+						});
+					},
+					//calling total users for today function
+					function(callback) {
+						total_resolved_reports(req,res,function(total_resolved_reports_result){
+							callback(null,total_resolved_reports_result)
+						});
+					}
+				],
+				function(err, results) {
+					console.log(err);
+					console.log(results);
+					var response = {
+						"message": constants.responseMessages.ACTION_COMPLETE,
+						"status": constants.responseFlags.ACTION_COMPLETE,
+						"data": {
+							"total_orders": results[0],
+							"total_today_orders": results[1],
+							"total_users":results[2],
+							"total_users_registered_today":results[3],
+							"total_offers":results[4],
+							"total_today_offers":results[5],
+							"total_earnings":results[6],
+							"total_reports":results[7],
+							"total_unresolved_reports":results[8],
+							"total_resolved_reports":results[9]
+						}
+					};
+					res.send(JSON.stringify(response));
+				});
+			}
+		});
+	}
+};
+
+function total_users(req, res,callback) {
+	
+	var sql = "SELECT count(`user_id`) as `total_users` FROM `user` WHERE `is_verified`=?";
+	connection.query(sql, [1], function (err, total_user_result) {
+		console.log(err);
+		if (err) {
+			responses.sendError(res);
+			return;
+		}
+		if (total_user_result.length > 0) {
+			var response = total_user_result[0].total_users;
+		} else {
+			var response = '';
+		}
+		callback(response)
+	});
+}
+
+function total_users_registered_today(start_date,end_date,req, res,callback) {
+	var sql = "SELECT count(`user_id`) as `total_users_for_today` FROM `user` ";
+	sql += "WHERE `is_verified`=? AND `created_on`>=? AND `created_on`<=? ";
+	connection.query(sql, [1,start_date,end_date], function (err, totatuserstoday_result) {
+		if (err) {
+			responses.sendError(res);
+			return;
+		}
+		if (totatuserstoday_result.length > 0) {
+			var response = totatuserstoday_result[0].total_users_for_today;
+		} else {
+			var response = '';
+		}
+		callback(response)
+	});
+}
+
+function total_order(req, res,callback) {
+	
+	var sql = "SELECT count(`order_id`) as `total_orders` FROM `order_details`";
+	connection.query(sql, [], function (err, total_order_result) {
+		console.log(err);
+		if (err) {
+			responses.sendError(res);
+			return;
+		}
+		if (total_order_result.length > 0) {
+			var response = total_order_result[0].total_orders;
+		} else {
+			var response = '';
+		}
+		callback(response)
+	});
+}
+
+function total_today_order(start_date,end_date,req, res,callback) {
+	var sql = "SELECT count(`order_id`) as `total_orders_for_today` FROM `order_details` ";
+	sql += "WHERE `created_on`>=? AND `created_on`<=? ";
+	connection.query(sql, [start_date,end_date], function (err, totatorderstoday_result) {
+		if (err) {
+			responses.sendError(res);
+			return;
+		}
+		if (totatorderstoday_result.length > 0) {
+			var response = totatorderstoday_result[0].total_orders_for_today;
+		} else {
+			var response = '';
+		}
+		callback(response)
+	});
+}
+
+function total_offers(req, res,callback) {
+	
+	var sql = "SELECT count(`offer_id`) as `total_offers` FROM `offer`";
+	connection.query(sql, [], function (err, total_offer_result) {
+		console.log(err);
+		if (err) {
+			responses.sendError(res);
+			return;
+		}
+		if (total_offer_result.length > 0) {
+			var response = total_offer_result[0].total_offers;
+		} else {
+			var response = '';
+		}
+		callback(response)
+	});
+}
+
+function total_offers_today(start_date,end_date,req, res,callback) {
+	var sql = "SELECT count(`offer_id`) as `total_offers_for_today` FROM `offer` ";
+	sql += "WHERE `created_on`>=? AND `created_on`<=? ";
+	connection.query(sql, [start_date,end_date], function (err, totatofferstoday_result) {
+		if (err) {
+			responses.sendError(res);
+			return;
+		}
+		if (totatofferstoday_result.length > 0) {
+			var response = totatofferstoday_result[0].total_offers_for_today;
+		} else {
+			var response = '';
+		}
+		callback(response)
+	});
+}
+
+function total_earnings(req, res,callback) {
+	
+	var sql = "SELECT *  FROM `offer` WHERE `status`=?";
+	connection.query(sql, [3], function (err, total_earning_result) {
+		// console.log(err);
+		if (err) {
+			responses.sendError(res);
+			return;
+		}
+		if (total_earning_result.length > 0) {
+			// console.log(total_earning_result);
+			var sum = 0;
+			for (var i = 0; i < total_earning_result.length; i++) {
+				sum = sum + parseInt(total_earning_result[i].amount);
+			}
+			var response = sum;
+		} else {
+			var response = '';
+		}
+		callback(response)
+	});
+}
+
+function total_reports(req, res, callback) {
+	var sql = "SELECT count(`report_id`) as `total_reports`  FROM `report`";
+	connection.query(sql, [], function (err, total_reports_result) {
+		// console.log(err);
+		if (err) {
+			responses.sendError(res);
+			return;
+		}
+		if (total_reports_result.length > 0) {
+			var response = total_reports_result[0].total_reports;
+		} else {
+			var response = '';
+		}
+		callback(response)
+	});
+}
+
+function total_unresolved_reports(req, res, callback) {
+	var sql = "SELECT count(`report_id`) as `total_reports`  FROM `report` WHERE `is_resolved`=?";
+	connection.query(sql, [0], function (err, total_unresolved_reports_result) {
+		console.log(err);
+		if (err) {
+			responses.sendError(res);
+			return;
+		}
+		if (total_unresolved_reports_result.length > 0) {
+			var response = total_unresolved_reports_result[0].total_reports;
+		} else {
+			var response = '';
+		}
+		callback(response)
+	});
+}
+
+function total_resolved_reports(req, res, callback) {
+	var sql = "SELECT count(`report_id`) as `total_reports`  FROM `report` WHERE `is_resolved`=?";
+	connection.query(sql, [1], function (err, total_resolved_reports_result) {
+		// console.log(err);
+		if (err) {
+			responses.sendError(res);
+			return;
+		}
+		if (total_resolved_reports_result.length > 0) {
+			var response = total_resolved_reports_result[0].total_reports;
+		} else {
+			var response = '';
+		}
+		callback(response)
+	});
+}
+
+exports.get_total_user_graph_data = function(req,res){
+	var access_token = req.body.access_token;
+	var start_time = req.body.start_time;
+	var end_time = req.body.end_time;
+
+	var manvalues = [access_token];
+	var checkblank = commonFunc.checkBlank(manvalues);
+	if (checkblank == 1) {
+		responses.parameterMissingResponse(res);
+		return;
+	} else {
+		utils.authenticateAdminAccessToken(access_token, function (result) {
+			if (result == 0) {
+				responses.sendError(res);
+				return;
+			} else {
+				console.log(result);
+				var sql = "SELECT * FROM `user` WHERE `created_on` >= DATE_SUB(CURDATE(), INTERVAL DAYOFMONTH(CURDATE())-1 DAY)";
+				connection.query(sql, [], function(err, results){
+					console.log("aa");
+					console.log(err);
+					console.log(results);
+				});
+			}
+		});
+	}
 }

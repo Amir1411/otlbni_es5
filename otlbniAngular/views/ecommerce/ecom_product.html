@@ -1,0 +1,245 @@
+<div class="productPage">
+
+	<div id="deleteProductPopup" tabindex="-1" role="dialog" class="modal fade">
+		<div class="backgroundOverlay"></div>
+		<div class="modal-dialog modal-md">
+			<div class="modal-content">
+				<div class="modal-header bg-success">
+					<h4 class="modal-title" >Delete Product</h4>
+				</div>
+				<div class="modal-body">
+					<div class="panel-body">
+                    <h4> Are you sure you want to delete the Product?</h4>
+				    <button type="button" class="btn btn-danger" style="float:right;">Delete</button>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+    <div class="layout-content">
+		<div class="layout-content-body">
+			<div class="row title-bar clearfix">
+				<div class="col-xs-6 col-md-6">
+					<h1 class="title-bar-title">
+						<span class="d-ib">Product Management</span>
+					</h1>
+				</div>
+				<div class="col-xs-6 col-md-6">
+					<div class="pull-right">
+						<div class="form-group text-right">
+							<label for="">&nbsp;&nbsp;</label>
+							<button class="btn btn-default m-r-sm" type="button"><a href="/#!/ecommerce/add_product" style="cursor:pointer;text-decoration:none;color:white;" ><i class="fa fa-plus"></i></a></button>
+							<a href="#"><button class="btn btn-success pull-right" type="submit" id="approvedDriverCsv"><i class="fa fa-copy"></i></button></a>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class="row">
+				<div class="col-md-9">
+					<div class="panel panel-default">
+						<div class="panel-heading">
+				            <h3 class="panel-title"><i class="fa fa-list"></i> Product List</h3>
+				        </div>
+				        <div class="panel-body">
+							<table id="product" class="table table-striped" cellspacing="0" width="100%" role="grid" style="width: 100%;">
+						        <thead>
+						            <tr>
+						                <th class="text-center">Sr. No.</th>
+						                <th class="text-center">Image</th>
+						                <th class="text-center">Product Name</th>
+						                <th class="text-center">Price</th>
+						                <th class="text-center">Quantity</th>
+						                <th class="text-center">Status</th>
+						                <th class="text-center">Action</th>
+						            </tr>
+						        </thead>
+						        <tbody>
+									<!-- <tr ng-repeat="(key,list) in productList">
+									   <td class="text-center">{{list.number}}</td>
+									   <td class="text-center">{{list.product_name}}</td>
+									   <td class="text-center" colspan="2">
+											<a class="btn btn-sm btn-default" href="/#!/ecommerce/edit_product/" title="Edit">
+						                		<i class="fa fa-pencil icon-css pencil-icon"></i>
+											</a>
+											<a class="btn btn-sm btn-default" href="" title="Edit" data-toggle="modal" data-target="#deleteProductPopup">
+												<i class="fa fa-trash-o"></i>
+											</a>
+										</td>
+									</tr> -->		
+						            <tr>
+									   <td class="text-center">1</td>
+									   <td class="text-center"><img src="http://lorempixel.com/400/200" width="40px" height="40px"></td>
+									   <td class="text-center">Apple Cinema</td>
+									   <td class="text-center">$90</td>
+									   <td class="text-center">900</td>
+									   <td class="text-center"><div class="status active">Enabled</div></td>
+									   <td class="text-center" colspan="2">
+											<a class="btn btn-sm btn-default" href="/#!/ecommerce/edit_product/" title="Edit">
+						                		<i class="fa fa-pencil icon-css pencil-icon"></i>
+											</a>
+										</td>
+									</tr>
+									<tr>
+									   <td class="text-center">2</td>
+									   <td class="text-center"><img src="http://lorempixel.com/400/200" width="40px" height="40px"></td>
+									   <td class="text-center">Apple Cinema</td>
+									   <td class="text-center">$90</td>
+									   <td class="text-center">900</td>
+									   <td class="text-center"><div class="status active">Enabled</div></td>
+									   <td class="text-center" colspan="2">
+											<a class="btn btn-sm btn-default" href="/#!/ecommerce/edit_product/" title="Edit">
+						                		<i class="fa fa-pencil icon-css pencil-icon"></i>
+											</a>
+										</td>
+									</tr>
+									<tr>
+									   <td class="text-center">3</td>
+									   <td class="text-center"><img src="http://lorempixel.com/400/200" width="40px" height="40px"></td>
+									   <td class="text-center">Apple Cinema</td>
+									   <td class="text-center">$90</td>
+									   <td class="text-center">900</td>
+									   <td class="text-center"><div class="status active">Enabled</div></td>
+									   <td class="text-center" colspan="2">
+											<a class="btn btn-sm btn-default" href="/#!/ecommerce/edit_product/" title="Edit">
+						                		<i class="fa fa-pencil icon-css pencil-icon"></i>
+											</a>
+										</td>
+									</tr>
+									<tr>
+									   <td class="text-center">4</td>
+									   <td class="text-center"><img src="http://lorempixel.com/400/200" width="40px" height="40px"></td>
+									   <td class="text-center">Apple Cinema</td>
+									   <td class="text-center">$90</td>
+									   <td class="text-center">900</td>
+									   <td class="text-center"><div class="status offline">Disabled</div></td>
+									   <td class="text-center" colspan="2">
+											<a class="btn btn-sm btn-default" href="/#!/ecommerce/edit_product/" title="Edit">
+						                		<i class="fa fa-pencil icon-css pencil-icon"></i>
+											</a>
+										</td>
+									</tr>
+									<tr>
+									   <td class="text-center">5</td>
+									   <td class="text-center"><img src="http://lorempixel.com/400/200" width="40px" height="40px"></td>
+									   <td class="text-center">Apple Cinema</td>
+									   <td class="text-center">$90</td>
+									   <td class="text-center">900</td>
+									   <td class="text-center"><div class="status offline">Disabled</div></td>
+									   <td class="text-center" colspan="2">
+											<a class="btn btn-sm btn-default" href="/#!/ecommerce/edit_product/" title="Edit">
+						                		<i class="fa fa-pencil icon-css pencil-icon"></i>
+											</a>
+										</td>
+									</tr>
+									<tr>
+									   <td class="text-center">6</td>
+									   <td class="text-center"><img src="http://lorempixel.com/400/200" width="40px" height="40px"></td>
+									   <td class="text-center">Apple Cinema</td>
+									   <td class="text-center">$90</td>
+									   <td class="text-center">900</td>
+									   <td class="text-center"><div class="status active">Enabled</div></td>
+									   <td class="text-center" colspan="2">
+											<a class="btn btn-sm btn-default" href="/#!/ecommerce/edit_product/" title="Edit">
+						                		<i class="fa fa-pencil icon-css pencil-icon"></i>
+											</a>
+										</td>
+									</tr>
+									<tr>
+									   <td class="text-center">7</td>
+									   <td class="text-center"><img src="http://lorempixel.com/400/200" width="40px" height="40px"></td>
+									   <td class="text-center">Apple Cinema</td>
+									   <td class="text-center">$90</td>
+									   <td class="text-center">900</td>
+									   <td class="text-center"><div class="status offline">Disabled</div></td>
+									   <td class="text-center" colspan="2">
+											<a class="btn btn-sm btn-default" href="/#!/ecommerce/edit_product/" title="Edit">
+						                		<i class="fa fa-pencil icon-css pencil-icon"></i>
+											</a>
+										</td>
+									</tr>
+									<tr>
+									   <td class="text-center">8</td>
+									   <td class="text-center"><img src="http://lorempixel.com/400/200" width="40px" height="40px"></td>
+									   <td class="text-center">Apple Cinema</td>
+									   <td class="text-center">$90</td>
+									   <td class="text-center">900</td>
+									   <td class="text-center"><div class="status offline">Disabled</div></td>
+									   <td class="text-center" colspan="2">
+											<a class="btn btn-sm btn-default" href="/#!/ecommerce/edit_product/" title="Edit">
+						                		<i class="fa fa-pencil icon-css pencil-icon"></i>
+											</a>
+										</td>
+									</tr>
+									<tr>
+									   <td class="text-center">9</td>
+									   <td class="text-center"><img src="http://lorempixel.com/400/200" width="40px" height="40px"></td>
+									   <td class="text-center">Apple Cinema</td>
+									   <td class="text-center">$90</td>
+									   <td class="text-center">900</td>
+									   <td class="text-center"><div class="status active">Enabled</div></td>
+									   <td class="text-center" colspan="2">
+											<a class="btn btn-sm btn-default" href="/#!/ecommerce/edit_product/" title="Edit">
+						                		<i class="fa fa-pencil icon-css pencil-icon"></i>
+											</a>
+										</td>
+									</tr>
+									<tr>
+									   <td class="text-center">10</td>
+									   <td class="text-center"><img src="http://lorempixel.com/400/200" width="40px" height="40px"></td>
+									   <td class="text-center">Apple Cinema</td>
+									   <td class="text-center">$90</td>
+									   <td class="text-center">900</td>
+									   <td class="text-center"><div class="status active">Enabled</div></td>
+									   <td class="text-center" colspan="2">
+											<a class="btn btn-sm btn-default" href="/#!/ecommerce/edit_product/" title="Edit">
+						                		<i class="fa fa-pencil icon-css pencil-icon"></i>
+											</a>
+										</td>
+									</tr>
+								</tbody>
+						    </table>
+						</div>
+					</div>
+		    	</div>
+		    	<div class="col-md-3">
+		    		<div class="panel panel-default">
+						<div class="panel-heading">
+				            <h3 class="panel-title"><i class="fa fa-filter"></i> Filter</h3>
+				        </div>
+				        <div class="panel-body">
+							<form class="form form-horizontal" ng-submit="changePassword()">
+								<div class="form-group">
+									<label for="" class=" control-label">Product Name</label>
+									<input id="" class="form-control" type="text" ng-model="product_name">
+								</div>
+								<div class="form-group">
+									<label for="" class="control-label">Price</label>
+									<input id="" class="form-control" type="text" ng-model="product_price">
+								</div>
+								<div class="form-group">
+									<label for="" class="control-label">Quantity</label>
+									<input id="" class="form-control" type="text" ng-model="product_quantity">
+								</div>
+								<div class="form-group">
+									<label for="" class="control-label">Status</label>
+									<select class="form-control">
+										<option value="0">Enable</option>
+										<option value="1">Disable</option>
+									</select>
+								</div>
+								<div class="form-group">
+									<div class="" style="margin-top: 10px;">
+										<div class="">
+											<button class="btn btn-block" type="submit"><i class="fa fa-filter"></i> Filter</button>
+										</div>
+									</div>
+								</div>
+							</form>
+						</div>
+					</div>
+		    	</div>
+			</div>
+		</div>
+	</div>
+</div>

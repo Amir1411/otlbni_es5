@@ -32,6 +32,7 @@ var order_panel = require('./routes/order');
 var notification = require('./routes/notification');
 var ecommerce_panel = require('./routes/ecommerce/add_category');
 var ecommerce_panel_brand = require('./routes/ecommerce/brand');
+var ecommerce_panel_product = require('./routes/ecommerce/product');
 var user_message = require('./routes/message');
 
 console.log(user_panel);
@@ -195,6 +196,8 @@ app.post('/user_feedback', user_panel.user_feedback);
 app.post('/user_feedback_list', user_panel.user_feedback_list);
 app.post('/create_bill', user_panel.create_bill);
 app.post('/get_other_user_details', user_panel.get_other_user_details);
+app.post('/update_location', user_panel.update_location);
+app.post('/notification_on_off', user_panel.notification_on_off);
 
 //.......................PLACES PANEL API's.............................
 
@@ -215,6 +218,7 @@ app.post('/cancel_order', order_panel.cancel_order);
 app.post('/getNotificationDetails', order_panel.getNotificationDetails);
 app.post('/create_offer', order_panel.create_offer);
 app.post('/accept_reject_offer', order_panel.accept_reject_offer);
+app.post('/get_offer_list', order_panel.get_offer_list);
 
 //.......................NOTIFICATION PANEL API's.............................
 
@@ -238,6 +242,10 @@ app.post('/block_unblock_user', admin_panel.block_unblock_user);
 app.post('/getCourierPlaceDetails', admin_panel.getCourierPlaceDetails);
 app.post('/update_profile', admin_panel.update_profile);
 app.post('/check_verification_token', admin_panel.check_verification_token);
+app.post('/getAdminOrder', admin_panel.getAdminOrder);
+app.post('/getAllAdminOrder', admin_panel.getAllAdminOrder);
+app.post('/dashboard_report', admin_panel.dashboard_report);
+app.post('/get_total_user_graph_data', admin_panel.get_total_user_graph_data);
 
 // ....................... Ecommerce Admin Panel API ..........................
 
@@ -264,6 +272,8 @@ app.post('/get_brand_details', ecommerce_panel_brand.get_brand_details);
 app.post('/active_inactive_brand', ecommerce_panel_brand.active_inactive_brand);
 app.post('/update_brand', ecommerce_panel_brand.update_brand);
 app.post('/add_brand', uploadAdminBrand.single('brand_image'), ecommerce_panel_brand.add_brand);
+
+app.post('/get_product_list', ecommerce_panel_product.get_product_list);
 
 // app.post('/my_order', order_panel.my_order);
 

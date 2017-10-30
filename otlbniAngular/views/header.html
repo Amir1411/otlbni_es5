@@ -98,7 +98,7 @@
 		</div>
 	</div>
 	<div class="layout-main">
-		<div class="layout-sidebar" id="layout-sidebar">
+		<div class="layout-sidebar" id="layout-sidebar" style="position: fixed;">
 			<div class="layout-sidebar-backdrop"></div>
 			<div class="layout-sidebar-body">
 				<div class="custom-scrollbar">
@@ -134,7 +134,20 @@
 								</a>
 								<ul class="sidenav-subnav" ng-show="subnavshowdiv['account']">
 									<li><a href="/#!/userlist">User List</a></li>
-									<li><a href="/#!/courierlist">Courier List</a></li>  
+									<!-- <li><a href="/#!/courierlist">Courier List</a></li>   -->
+								</ul>
+							</li>
+							<li class="sidenav-item has-subnav orderPageNav" ng-class="currentRoute == '/allOrder' || currentRoute == '/pendingOrder' || currentRoute == '/completedOrder' || currentRoute == '/cancelledOrder' || currentRoute == '/onTheWayOrder'?'active':''">
+								<a href="javascript:void(0);" class="orderManageTab" ng-click="subnavshow('order')" ng-class="subnavshowdiv['order']?'active':''">
+									<span class="sidenav-icon icon icon-lock"></span>
+									<span class="sidenav-label">Order Management</span>
+								</a>
+								<ul class="sidenav-subnav" ng-show="subnavshowdiv['order']">
+									<li><a href="/#!/allOrder">All Order</a></li>
+									<li><a href="/#!/pendingOrder">Pending Order</a></li>
+									<li><a href="/#!/onTheWayOrder">On the way Order</a></li>
+									<li><a href="/#!/completedOrder">Completed Order</a></li> 
+									<li><a href="/#!/cancelledOrder">Cancelled Order</a></li>  
 								</ul>
 							</li>
 							<!-- <li class="sidenav-item carBrandManagementNav" ng-class="currentRoute == '/carbrand'?'active':''">
@@ -156,7 +169,8 @@
 								</a>
 								<ul class="sidenav-subnav" ng-show="subnavshowdiv['ecommerce']">
 									<li><a href="/#!/ecommerce/brand">Brand</a></li>
-									<li><a href="/#!/ecommerce/mastercategory">Category</a></li>  
+									<li><a href="/#!/ecommerce/mastercategory">Category</a></li> 
+									<li><a href="/#!/ecommerce/product">Product</a></li>  
 								</ul>
 							</li>
 						</ul>

@@ -5,8 +5,8 @@
     "iosApnCertificateForDriver":"",
     "PORT":3002,
     "serverFCMKey": "AAAAmiznu3M:APA91bHRQ7h0VbuTPBxf0JGguj-pxmBiCZKCyq0EOJBDa-PR-o16BpBJsCu-SbxzLrj26UNZ5n6LrMXo_AaCpHCyZ3xCAsXyxvsqN4MLy0FcIpEei6Siph0mSrvaVFLgHW_ckdrkcnMV",
-    "mapKey": "AIzaSyDPwvm9_-aQArtMrWocoxmTmBp_jcRUhlw",
-    // "mapKey": "AIzaSyCkqrbV6szks30eys4-zft9srE8drgLlWs",
+    // "mapKey": "AIzaSyDPwvm9_-aQArtMrWocoxmTmBp_jcRUhlw",
+    "mapKey": "AIzaSyCkqrbV6szks30eys4-zft9srE8drgLlWs",
     "twillioCredentials":{
         "accountSid":"AC537ab5c108102a1ae3b1dbdb96e804d9",
         "authToken":"a22885b16f4d090525a237a659623a71",

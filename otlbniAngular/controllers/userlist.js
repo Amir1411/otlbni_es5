@@ -71,4 +71,17 @@ app.controller("userlist", ['$scope','httpService','API_URL','$window','$rootSco
 			}
 		});
 	}
+
+	$scope.getCourierDetails = function(user_id, key) {
+		params = {access_token: access_token, user_id: user_id};
+		httpService.post( API_URL + '/getCourierPlaceDetails', params).then(function(response){
+			var response = response.response.data;
+			// console.log(response);
+			if(response.status == 200){
+				var responseData = response.response.courier_place_list;
+				console.log(responseData);
+				$scope.courierPlaceList = responseData;
+			}
+		});
+	}
 }]);

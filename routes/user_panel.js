@@ -19,6 +19,7 @@ exports.social_login = function(req, res) {
 	var social_type = req.body.social_type;
 	var social_id = req.body.social_id;
 	var device_token = req.body.device_token;
+	var device_type = req.body.device_type;
 
 	var sql = "SELECT * FROM `user` WHERE fb_id=? OR g_id=? OR twitter_id=? LIMIT 1";
 	connection.query(sql, [social_id, social_id, social_id], function(err, response) {
@@ -33,7 +34,7 @@ exports.social_login = function(req, res) {
 				var access_token = md5(utils.generateRandomString());
 				var mobile_number = response[0].mobile_number;
 
-				var update_otp = "UPDATE `user` SET `verification_code`="+otp+", `access_token`='"+access_token+"', `device_token`='"+device_token+"' WHERE `user_id`=?";
+				var update_otp = "UPDATE `user` SET `verification_code`="+otp+", `access_token`='"+access_token+"', `device_token`='"+device_token+"', `device_type`='"+device_type+"' WHERE `user_id`=?";
 				connection.query(update_otp, [response[0].user_id], function(err, result){
 					// var username = response[0].user_name;
 					console.log(mobile_number);
@@ -51,7 +52,7 @@ exports.social_login = function(req, res) {
 				res.status(constants.responseFlags.ACTION_COMPLETE).json(response);
 			} else {
 				var access_token = md5(utils.generateRandomString());
-				var update_otp = "UPDATE `user` SET `access_token`='"+access_token+"', `device_token`='"+device_token+"' WHERE `user_id`=?";
+				var update_otp = "UPDATE `user` SET `access_token`='"+access_token+"', `device_token`='"+device_token+"', `device_type`='"+device_type+"' WHERE `user_id`=?";
 				connection.query(update_otp, response[0].user_id, function(err, result){
 					if(err) {
 						responses.sendError(res);
@@ -111,7 +112,7 @@ exports.insert_mobile_number = function(req, res) {
 			var user_unique_id = md5(user_id);
 			var access_token = md5(utils.generateRandomString());
 			var otp = utils.generateRandomString();
-			console.log(otp);
+			
 			if ( social_type == "facebook" ) {
  				var social_type_text = "fb_id";
 			} else if ( social_type == "google" ) {
@@ -119,10 +120,12 @@ exports.insert_mobile_number = function(req, res) {
 			} else if ( social_type == "twitter" ) {
 				var social_type_text = "twitter_id";
 			}
-			console.log(social_type);
-			console.log(social_type_text);
-			var sql = "INSERT INTO `user`(`user_id`,`mobile_number`, `social_type`, `access_token`, `"+social_type_text+"`, `verification_code`, `device_type`, `device_token`, `lattitude`, `longitude`) VALUES (?,?,?,?,?,?,?,?,?,?)";
-			var value = [user_unique_id, mobile_number, social_type, access_token, social_id, otp, device_type, device_token, lattitude, longitude];
+
+			var currentTime = new Date();
+            var created_on = Math.round(currentTime.getTime() / 1000);
+
+			var sql = "INSERT INTO `user`(`user_id`,`mobile_number`, `social_type`, `access_token`, `"+social_type_text+"`, `verification_code`, `device_type`, `device_token`, `lattitude`, `longitude`, `created_on`) VALUES (?,?,?,?,?,?,?,?,?,?,?)";
+			var value = [user_unique_id, mobile_number, social_type, access_token, social_id, otp, device_type, device_token, lattitude, longitude, created_on];
 			connection.query(sql, value, function (err, result) {
 				if (err) {
 					responses.sendError(res);
@@ -230,10 +233,11 @@ exports.create_account = function(req, res) {
 			var user_unique_id = md5(user_id);
 			var access_token = md5(utils.generateRandomString());
 			var otp = utils.generateRandomString();
-			// var hash = md5(password);
+			var currentTime = new Date();
+            var created_on = Math.round(currentTime.getTime() / 1000);
 			
-			var sql = "INSERT INTO `user`(`user_id`,`mobile_number`, `social_type`, `access_token`, `verification_code`, `device_type`, `device_token`, `lattitude`, `longitude`) VALUES (?,?,?,?,?,?,?,?,?)";
-			var value = [user_unique_id, mobile_number, social_type, access_token, otp, device_type, device_token, lattitude, longitude];
+			var sql = "INSERT INTO `user`(`user_id`,`mobile_number`, `social_type`, `access_token`, `verification_code`, `device_type`, `device_token`, `lattitude`, `longitude`, `created_on`) VALUES (?,?,?,?,?,?,?,?,?,?)";
+			var value = [user_unique_id, mobile_number, social_type, access_token, otp, device_type, device_token, lattitude, longitude, created_on];
 			connection.query(sql, value, function (err, result) {
 				if (err) {
 					responses.sendError(res);
@@ -263,7 +267,7 @@ exports.login = function(req, res) {
 	var mobile_number = req.body.mobile_number;
 	// var password = req.body.password;
 	var device_token = req.body.device_token;
-	console.log(device_token);
+	var device_type = req.body.device_type;
 	var manvalues = [mobile_number];
 	var checkblank = commonFunc.checkBlank(manvalues);
 	if (checkblank == 1) {
@@ -304,7 +308,7 @@ exports.login = function(req, res) {
 							var access_token = md5(utils.generateRandomString());
 							var mobile_number = result_check[0].mobile_number;
 
-							var update_otp = "UPDATE `user` SET `verification_code`="+otp+", `access_token`='"+access_token+"', `device_token`='"+device_token+"' WHERE `user_id`=?";
+							var update_otp = "UPDATE `user` SET `verification_code`="+otp+", `access_token`='"+access_token+"', `device_token`='"+device_token+"', `device_type`='"+device_type+"' WHERE `user_id`=?";
 							connection.query(update_otp, [result_check[0].user_id], function(err, result){
 								// var username = response[0].user_name;
 								messenger.sendOTP("Customer", mobile_number, otp);
@@ -1319,5 +1323,88 @@ exports.user_feedback_list = function(req, res) {
 	        	}
             }
         });
+	}
+}
+
+exports.update_location = function(req, res) {
+	var access_token = req.body.access_token;
+	var lattitude = req.body.lattitude;
+	var longitude = req.body.longitude;
+	var manvalues = [access_token, lattitude, longitude];
+	var checkblank = commonFunc.checkBlank(manvalues);
+	if (checkblank == 1) {
+		responses.parameterMissingResponse(res);
+		return;
+	} else {
+		utils.authenticateUser(access_token, function(result) {
+	        if (result == 0) {
+	             var response = {
+					flag: 1,
+					response: {},
+					message: "Invalid access token."	
+				};
+				res.status(constants.responseFlags.INVALID_ACCESS_TOKEN).json(response);
+				return;
+	        } else {
+	        	var user_id = result[0].user_id;
+	        	var update_sql = "UPDATE `user` SET `lattitude`= '"+lattitude+"', `longitude`= '"+longitude+"' WHERE `access_token`=?";
+				connection.query(update_sql, [access_token], function(err, result){
+					if (err) {
+						console.log(err);
+					} else {
+						var response = {
+							flag: 1,
+							response: {},
+							message: "Location Update Successfully"
+						};
+						res.status(constants.responseFlags.ACTION_COMPLETE).json(response);
+					}
+				});
+	        }
+	    });
+	}
+};
+
+exports.notification_on_off = function(req, res) {
+	var access_token = req.body.access_token;
+	var is_notification_on = req.body.is_notification_on; // 0 = off, 1 = on 
+	var manvalues = [access_token, is_notification_on];
+	var checkblank = commonFunc.checkBlank(manvalues);
+	if (checkblank == 1) {
+		responses.parameterMissingResponse(res);
+		return;
+	} else {
+		utils.authenticateUser(access_token, function(result) {
+	        if (result == 0) {
+	             var response = {
+					flag: 1,
+					response: {},
+					message: "Invalid access token."	
+				};
+				res.status(constants.responseFlags.INVALID_ACCESS_TOKEN).json(response);
+				return;
+	        } else {
+	        	var user_id = result[0].user_id;
+	        	var update_sql = "UPDATE `user` SET `is_notification_on`= '"+is_notification_on+"' WHERE `access_token`=?";
+				connection.query(update_sql, [access_token], function(err, result){
+					if (err) {
+						console.log(err);
+					} else {
+
+						if ( is_notification_on == 1 ) {
+							var msg = "Notification on successfully";
+						} else if ( is_notification_on == 0 ) {
+							var msg = "Notification off successfully";
+						}
+						var response = {
+							flag: 1,
+							response: {"is_notification_on": is_notification_on},
+							message: msg
+						};
+						res.status(constants.responseFlags.ACTION_COMPLETE).json(response);
+					}
+				});
+	        }
+	    });
 	}
 }

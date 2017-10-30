@@ -26,7 +26,7 @@ exports.get_near_by_restaurant_list = function(req, res){
     var types = req.body.types;
 
     var https = require('https');
-    var url = "https://maps.googleapis.com/maps/api/place/nearbysearch/json?location="+location+"&radius="+radius+"&type="+types+"&key="+key;
+    var url = "https://maps.googleapis.com/maps/api/place/nearbysearch/json?location="+location+"&radius="+radius+"&type="+types+"&key="+key+"&language=ar";
 
     https.get(url, function(response) {
         var body ='';
@@ -67,6 +67,8 @@ exports.get_place_details = function(req, res){
 
     var key = config.get("mapKey");
     var place_id = req.body.place_id;
+    var lattitude = req.body.lattitude;
+    var longitude = req.body.longitude;
     var access_token = req.body.access_token;
 
     var https = require('https');
@@ -83,53 +85,99 @@ exports.get_place_details = function(req, res){
         var places = JSON.parse(body);
         var locations = places.result; 
         var responseArray = [];
+        console.log(locations);
         
-        var get_checkin_count = "SELECT * FROM `courier` WHERE `place_id`=?";
-        connection.query(get_checkin_count, [place_id], function(err, checkingCount) {
+        var sql = "SELECT * FROM `courier`";
+        connection.query(sql, [], function(err, placeResult){
             if (err) {
-                console.log(err);
+                responses.sendError(res);
+                return;
             } else {
-                if ( access_token != "" ) {
-                    var sql = "SELECT * FROM `user` WHERE `access_token`=? and is_blocked = 0 and is_deleted = 0 LIMIT 1";
-                    connection.query(sql, [access_token], function(err, result) {
+                var userArray = [];
+                for ( var i=0; i<placeResult.length; i++) {
+                    userArray.push(placeResult[i].user_id);
+                }
+                if (placeResult.length > 0 ) {
+                    var sql = "SELECT * FROM `user` WHERE `user_id` IN(?)";
+                    connection.query(sql, [userArray], function(err, userResult){
+                        console.log(err);
                         if (err) {
-                            console.log(err);
-                        } else if ( result.length > 0 ) {
-                            var user_id = result[0].user_id;
-                            var get_checkin_count = "SELECT * FROM `courier` WHERE `place_id`=? AND `user_id`=?";
-                            connection.query(get_checkin_count, [place_id, user_id], function(err, isChecking) {
-                                if (err) {
-                                    console.log(err);
-                                } else if ( isChecking.length > 0 ) {
-                                    var responseArray = {
-                                        flag: 1,
-                                        response: {"place_details" : locations, "checkin_count": checkingCount.length, "is_checkin_by_me": 1},
-                                        message: "Successfully data detched"
-                                    };
-                                    res.status(constants.responseFlags.ACTION_COMPLETE).json(responseArray);
-                                } else {
-                                    var responseArray = {
-                                        flag: 1,
-                                        response: {"place_details" : locations, "checkin_count": checkingCount.length, "is_checkin_by_me": 0},
-                                        message: "Successfully data detched"
-                                    };
-                                    res.status(constants.responseFlags.ACTION_COMPLETE).json(responseArray);
-                                }
-                            });
+                            responses.sendError(res);
+                            return;
                         } else {
-                            var responseArray = {
-                                flag: 1,
-                                response: {"place_details" : locations, "checkin_count": checkingCount.length, "is_checkin_by_me": 0},
-                                message: "Successfully data detched"
-                            };
-                            res.status(constants.responseFlags.ACTION_COMPLETE).json(responseArray);
+                            var checking_km_count = 0;
+                            for (var i in userResult) {
+                                //  For calculate distance
+                                var radlat1 = Math.PI * parseInt(lattitude)/180;
+                                var radlat2 = Math.PI * parseInt(userResult[i].lattitude)/180;
+                                var theta = parseInt(longitude)-parseInt(userResult[i].longitude);
+                                var radtheta = Math.PI * theta/180;
+                                var dist = Math.sin(radlat1) * Math.sin(radlat2) + Math.cos(radlat1) * Math.cos(radlat2) * Math.cos(radtheta);
+                                dist = Math.acos(dist);
+                                dist = dist * 180/Math.PI;
+                                dist = dist * 60 * 1.1515;
+                                // in KM
+                                dist = dist * 1.609344;
+
+                                if (dist < 20) {
+                                    checking_km_count++;
+                                }
+                            }
+                            if ( access_token != "" ) {
+                                var sql = "SELECT * FROM `user` WHERE `access_token`=? and is_blocked = 0 and is_deleted = 0 LIMIT 1";
+                                connection.query(sql, [access_token], function(err, result) {
+                                    if (err) {
+                                        console.log(err);
+                                    } else if ( result.length > 0 ) {
+                                        var user_id = result[0].user_id;
+                                        var get_checkin_count = "SELECT * FROM `courier` WHERE `place_id`=? AND `user_id`=?";
+                                        connection.query(get_checkin_count, [place_id, user_id], function(err, isChecking) {
+                                            if (err) {
+                                                console.log(err);
+                                            } else if ( isChecking.length > 0 ) {
+                                                var responseArray = {
+                                                    flag: 1,
+                                                    response: {"place_details" : locations, "checkin_count": checking_km_count, "is_checkin_by_me": 1},
+                                                    message: "Successfully data fetched"
+                                                };
+                                                res.status(constants.responseFlags.ACTION_COMPLETE).json(responseArray);
+                                            } else {
+                                                var responseArray = {
+                                                    flag: 1,
+                                                    response: {"place_details" : locations, "checkin_count": checking_km_count, "is_checkin_by_me": 0},
+                                                    message: "Successfully data fetched"
+                                                };
+                                                res.status(constants.responseFlags.ACTION_COMPLETE).json(responseArray);
+                                            }
+                                        });
+                                    } else {
+                                        var responseArray = {
+                                            flag: 1,
+                                            response: {"place_details" : locations, "checkin_count": checking_km_count, "is_checkin_by_me": 0},
+                                            message: "Successfully data fetched"
+                                        };
+                                        res.status(constants.responseFlags.ACTION_COMPLETE).json(responseArray);
+                                    }
+                                });
+                            } else {     
+                                var responseArray = {
+                                    flag: 1,
+                                    response: {"place_details" : locations, "checkin_count": checking_km_count, "is_checkin_by_me": 0},
+                                    message: "Successfully data fetched"
+                                };
+                                res.status(constants.responseFlags.ACTION_COMPLETE).json(responseArray);
+                            }
                         }
                     });
-                } else {     
+                } else {
                     var responseArray = {
                         flag: 1,
-                        response: {"place_details" : locations, "checkin_count": checkingCount.length, "is_checkin_by_me": 0},
-                        message: "Successfully data detched"
+                        response: {
+                            "place_details" : locations, 
+                            "checkin_count": 0, 
+                            "is_checkin_by_me": 0
+                        },
+                        message: "Successfully data fetched"
                     };
                     res.status(constants.responseFlags.ACTION_COMPLETE).json(responseArray);
                 }

@@ -845,17 +845,17 @@ exports.create_order = function(req, res) {
                 var created_on = Math.round(currentTime.getTime() / 1000);
 
                 if ( req.file != undefined ) {
-                    create_order(access_token,order_id, order_number, user_id, user_id, place_id, place_name, order_description, created_on, status, delivery_time, delivery_address,req.file.filename,lattitude,longitude,req,res);
+                    create_order(access_token,order_id, order_number, user_id, place_id, place_name, order_description, created_on, status, delivery_time, delivery_address,req.file.filename,lattitude,longitude,req,res);
                 } else {
                     var order_image = "";
-                    create_order(access_token,order_id, order_number, user_id, user_id, place_id, place_name, order_description, created_on, status, delivery_time, delivery_address,order_image,lattitude,longitude,req,res);
+                    create_order(access_token,order_id, order_number, user_id, place_id, place_name, order_description, created_on, status, delivery_time, delivery_address,order_image,lattitude,longitude,req,res);
                 }
             }
         });
     }
 }
 
-function create_order (access_token,order_id, order_number, user_id, user_id, place_id, place_name, order_description, created_on, status, delivery_time, delivery_address,order_image,lattitude,longitude,req,res) {
+function create_order (access_token,order_id, order_number, user_id, place_id, place_name, order_description, created_on, status, delivery_time, delivery_address,order_image,lattitude,longitude,req,res) {
    
     var sql = "INSERT INTO `order_details`(`order_id`, `order_number`, `user_id`, `created_by_id`, `place_id`, `place_name`, `order_description`, `created_on`, `status`, `delivery_time`, `delivery_address`, `order_image`, `lattitude`, `longitude`) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
     var value = [order_id, order_number, user_id, user_id, place_id, place_name, order_description, created_on, status, delivery_time, delivery_address, order_image, lattitude, longitude];
@@ -881,116 +881,157 @@ function create_order (access_token,order_id, order_number, user_id, user_id, pl
                             responses.sendError(res);
                             return;
                         } else {
+                            // console.log(userResult);
+                            // var mkArr = [];
                             // for (var i = 0; i < userResult.length; i++) {
                             for (var i in userResult) {
-
-                                //  For calculate distance
-                                var radlat1 = Math.PI * parseInt(lattitude)/180;
-                                var radlat2 = Math.PI * parseInt(userResult[i].lattitude)/180;
-                                var theta = parseInt(longitude)-parseInt(userResult[i].longitude);
-                                var radtheta = Math.PI * theta/180;
-                                var dist = Math.sin(radlat1) * Math.sin(radlat2) + Math.cos(radlat1) * Math.cos(radlat2) * Math.cos(radtheta);
-                                dist = Math.acos(dist);
-                                dist = dist * 180/Math.PI;
-                                dist = dist * 60 * 1.1515;
-                                // in KM
-                                dist = dist * 1.609344;
-                                console.log(dist);
-
-                                if (dist < 20) {
-                                    if ( userResult[i].account_balance == '' ) {
-                                        var acc = 0;
-                                    } else {
-                                        var acc = parseInt(userResult[i].account_balance);
-                                    }
-
-                                    if ( acc < 600 ) {
-                                        var notification_unique_id = utils.generateRandomString();
-                                        var notification_id = md5(notification_unique_id);
-                                        var currentTime = new Date();
-                                        var created_on = Math.round(currentTime.getTime() / 1000);
-                                        var notification_type = "1";
-                                        var notification_text = "There are new order waiting in - "+place_name;
-                                        
-                                        var sql = "INSERT INTO `notification`(`notification_id`,`sender_id`, `receiver_id`, `notification_type`, `notification_text`, `notification_type_id`, `created_on`) VALUES (?,?,?,?,?,?,?)";
-                                        var value = [notification_id, user_id, userResult[i].user_id, notification_type, notification_text , order_id, created_on];
-                                        connection.query(sql, value, function (err, result) {
-                                            // console.log(err);
-                                            if (err) {
-                                                responses.sendError(res);
-                                                return;
-                                            } else {
-                                                if ( userResult[i].device_token != "" ) {
-                                                    var serverKey = config.get('serverFCMKey'); //put your server key here 
-                                                    // console.log(userResult[i].device_token);
-                                                    var fcm = new FCM(serverKey);
-                                                 
-                                                 	if ( userResult[i].device_type == 1 ) {
-                                                    	var message = { //this may vary according to the message type (single recipient, multicast, topic, et cetera) 
-                                                            to: userResult[i].device_token, 
-                                                            collapse_key: 'otlbni',
-                                                            notification: {
-        											        	"title" : "OTLBNI",
-        											            "body" : notification_text,
-        													    "aps" : {
-        													        "alert" : {
-        													            "data" : {
-        											                        "notification_type": notification_type,
-        	                                                                "notification_type_id": order_id,
-        	                                                                "access_token": access_token,
-        	                                                                "sender_id": user_id,
-                                                                            "notification_id": notification_id
-        											                    }
-        													        },
-        													        "badge" : 5
-        													    }
-        													}
-                                                        };
-                                                    } else {
-        	                                            var message = { //this may vary according to the message type (single recipient, multicast, topic, et cetera) 
-        	                                                to: userResult[i].device_token, 
-        	                                                collapse_key: 'otlbni',
-        	                                                notification: {
-        	                                                    title: 'OTLBNI', 
-        	                                                    body:  notification_text
-        	                                                },
-        	                                                data: {
-        	                                                    notification_type: notification_type,
-        	                                                    notification_type_id: order_id,
-        	                                                    access_token: access_token,
-        	                                                    sender_id: user_id,
-                                                                notification_id: notification_id
-        	                                                }
-        	                                            };
-        	                                        }
-                                                    
-                                                    fcm.send(message, function(err, response){
-                                                        if (err) {
-                                                            // return callback(0);
-                                                            console.log(err);
-                                                        } else {
-                                                            // return callback(1);
-                                                            console.log("jhj"+response);
-                                                        }
-                                                    });
-                                                }
-                                            }
-                                        });
-                                    }
-                                } 
+                                userResult[i]["order_user_id"] = user_id;
+                                userResult[i]["order_lattitude"] = lattitude;
+                                userResult[i]["order_longitude"] = longitude;
+                                userResult[i]["order_id"] = order_id; 
+                                userResult[i]["create_order_place_name"] = place_name;
+                                userResult[i]["order_access_token"] = access_token;
+                                // mkArr.push(userResult[i]);
                             }
+                            async.eachSeries(userResult, create_order_notification, function (err, results) {
+                                var response = {
+                                    flag: 1,
+                                    response: "Order created successfully.",
+                                    message: "Order created successfully."
+                                };
+                                res.status(constants.responseFlags.ACTION_COMPLETE).json(response);
+                                return;
+                            });
+
+                            var response = {
+                                flag: 1,
+                                response: "Order created successfully.",
+                                message: "Order created successfully."
+                            };
+                            res.status(constants.responseFlags.ACTION_COMPLETE).json(response);
+                            return;
+
                         }
                     });
                 }
             });
-            var response = {
-                flag: 1,
-                response: "Order created successfully.",
-                message: "Order created successfully."
-            };
-            res.status(constants.responseFlags.ACTION_COMPLETE).json(response);
         }
     });
+}
+
+function create_order_notification (userResult, callback) {
+    console.log(userResult);
+    // var device_token_dummy =  userResult[i].device_token; 
+    console.log("x"+userResult.device_type);
+    console.log("y"+userResult.user_id);
+    console.log("z"+userResult.order_user_id);
+    if (userResult.user_id != userResult.order_user_id ) {
+        //  For calculate distance
+        var radlat1 = Math.PI * parseInt(userResult.order_lattitude)/180;
+        var radlat2 = Math.PI * parseInt(userResult.lattitude)/180;
+        var theta = parseInt(userResult.order_longitude)-parseInt(userResult.longitude);
+        var radtheta = Math.PI * theta/180;
+        var dist = Math.sin(radlat1) * Math.sin(radlat2) + Math.cos(radlat1) * Math.cos(radlat2) * Math.cos(radtheta);
+        dist = Math.acos(dist);
+        dist = dist * 180/Math.PI;
+        dist = dist * 60 * 1.1515;
+        // in KM
+        dist = dist * 1.609344;
+        console.log("x"+userResult.device_type);
+        if (dist < 20) {
+            if ( userResult.account_balance == '' ) {
+                var acc = 0;
+            } else {
+                var acc = parseInt(userResult.account_balance);
+            }
+
+            if ( acc < 600 ) {
+                if (userResult.is_notification_on  == 1) {
+                    var notification_unique_id = utils.generateRandomString();
+                    var notification_id = md5(notification_unique_id);
+                    var currentTime = new Date();
+                    var created_on = Math.round(currentTime.getTime() / 1000);
+                    var notification_type = "1";
+                    var notification_text = "There are new order waiting in - "+userResult.create_order_place_name;
+                    
+                    var sql = "INSERT INTO `notification`(`notification_id`,`sender_id`, `receiver_id`, `notification_type`, `notification_text`, `notification_type_id`, `created_on`) VALUES (?,?,?,?,?,?,?)";
+                    var value = [notification_id, userResult.order_user_id, userResult.user_id, notification_type, notification_text , userResult.order_id, created_on];
+                    connection.query(sql, value, function (err, result) {
+                        console.log(err);
+                        if (err) {
+                            callback();
+                        } else {
+
+                            if ( userResult.device_token != "" ) {
+                                var serverKey = config.get('serverFCMKey'); //put your server key here 
+                                var fcm = new FCM(serverKey);
+
+                                if ( userResult.device_type == 1 ) {
+                                    var message = { //this may vary according to the message type (single recipient, multicast, topic, et cetera) 
+                                        to: userResult.device_token, 
+                                        collapse_key: 'otlbni',
+                                        notification: {
+                                         "title" : "OTLBNI",
+                                            "body" : notification_text,
+                                            "aps" : {
+                                                "alert" : {
+                                                    "data" : {
+                                                        "notification_type": notification_type,
+                                                        "notification_type_id": userResult.order_id,
+                                                        "access_token": userResult.order_access_token,
+                                                        "sender_id": userResult.user_id,
+                                                        "notification_id": notification_id
+                                                    }
+                                                },
+                                                "badge" : 5
+                                            }
+                                        }
+                                    };
+                                    console.log(message);
+                                    fcm.send(message, function(err, response){
+                                        if (err) {
+                                            callback();
+                                            // console.log(err);
+                                        } else {
+                                            callback();
+                                            console.log("jhj"+response);
+                                        }
+                                    });
+                                } else if (userResult.device_type == 2) {
+                                    var message = { //this may vary according to the message type (single recipient, multicast, topic, et cetera) 
+                                        to: userResult.device_token, 
+                                        collapse_key: 'otlbni',
+                                        notification: {
+                                            title: 'OTLBNI', 
+                                            body:  notification_text
+                                        },
+                                        data: {
+                                            notification_type: notification_type,
+                                            notification_type_id: userResult.order_id,
+                                            access_token: userResult.order_access_token,
+                                            sender_id: userResult.order_user_id,
+                                            notification_id: notification_id
+                                        }
+                                    };
+                                    console.log(message);
+                                    fcm.send(message, function(err, response){
+                                        if (err) {
+                                            callback();
+                                            // console.log(err);
+                                        } else {
+                                            callback();
+                                            console.log("jhj"+response);
+                                        }
+                                    });
+                                }
+                                
+                            }
+                        }
+                    });
+                }
+            }
+        } 
+    }
 }
 
 exports.getNotificationDetails = function(req, res) {
@@ -1146,13 +1187,18 @@ function getNotification (result, notification_type, notification_type_id, sende
                                             get_user_details_with_rating(user_id, order_created_by_id, notification_type_id, req,res,function(get_user_details_with_rating_result){
                                                 callback(null,get_user_details_with_rating_result);
                                             });
+                                        },
+                                        function(callback) {
+                                            get_offer_count(user_id, order_created_by_id, notification_type_id, req,res,function(get_offer_count_result){
+                                                callback(null,get_offer_count_result);
+                                            });
                                         }
                                     ], function(err, results) {
                                         // console.log(err);
-                                        // console.log(results[1]);
+                                        console.log(results[2]);
                                         var response = {
                                             flag: 1,
-                                            response: {"user_details": results[1], "order_details": orderDetails[0], "place_details": results[0]},
+                                            response: {"user_details": results[1], "order_details": orderDetails[0], "place_details": results[0], "offer_count": results[2]},
                                             message: "Data fetched successfully"
                                         }
                                         res.status(constants.responseFlags.ACTION_COMPLETE).json(response);
@@ -1356,6 +1402,112 @@ function get_user_details_with_rating(user_id, order_created_by_id, order_id, re
                             //     user_details[0].offer_details = [];
                             // }
                             callback(user_details[0]);
+                        }
+                    });
+                }
+            });
+        }
+    });
+}
+
+function get_offer_count(user_id, order_created_by_id, order_id, req, res, callback) {
+    var sql = "SELECT * FROM `offer` WHERE `order_id`=? AND `status`=? AND `offer_created_by_id`!=?";
+    connection.query(sql, [order_id, 0, user_id], function(err, offer_count_result) {
+        if (err) {
+            responses.sendError(res);
+            return;
+        } else {
+            callback(offer_count_result.length);            
+        }
+    });
+}
+
+var arr = [];
+exports.get_offer_list = function(req, res) {
+    var access_token = req.body.access_token;
+    var order_id = req.body.order_id;
+    var status = 0;
+
+    var manvalues = [access_token, order_id];
+    var checkblank = commonFunc.checkBlank(manvalues);
+    if (checkblank == 1) {
+        responses.parameterMissingResponse(res);
+        return;
+    } else {
+        utils.authenticateUser(access_token, function(result) {
+            if (result == 0) {
+                var response = {
+                    flag: 1,
+                    response: {},
+                    message: "Invalid access token."    
+                };
+                res.status(constants.responseFlags.INVALID_ACCESS_TOKEN).json(response);
+                return;
+            } else {
+                var user_id = result[0].user_id;
+                var sql = "SELECT * FROM `offer` WHERE `order_id`=? AND `status`=? AND `offer_created_by_id`!=?";
+                connection.query(sql, [order_id, 0, user_id], function(err, offer_result) {
+                    if (err) {
+                        responses.sendError(res);
+                        return;
+                    } else {
+                        if ( offer_result.length > 0 ) {
+                            console.log(offer_result.length);
+                            async.eachSeries(offer_result, get_offer_list_result, function (err, results) {
+                                console.log(arr.length);
+                                var response = {
+                                    flag: 1,
+                                    response: arr,
+                                    message: "Data fetched."    
+                                };
+                                res.status(constants.responseFlags.ACTION_COMPLETE).json(response);
+                                arr = [];
+                                return;
+                            });
+                        } else {
+                            var response = {
+                                flag: 1,
+                                response: {},
+                                message: "No Data Found."    
+                            };
+                            res.status(constants.responseFlags.ACTION_COMPLETE).json(response);
+                            return;
+                        }
+                    }
+                });
+            }
+        });
+    }
+}
+
+function get_offer_list_result(offer_result, callback) {
+    var sql = "SELECT * FROM `user` WHERE `user_id`=?";
+    connection.query(sql, [offer_result.offer_created_by_id], function(err, user_details){
+        if (err) {
+            callback();
+        } else {
+            var user_rating_sql = "SELECT `rating_count` FROM `user_rating` WHERE `user_rating_to_id`=?";
+            connection.query(user_rating_sql, [offer_result.offer_created_by_id], function(err, user_rating_result) {
+                if (err) {
+                    callback();
+                } else {
+                    var order_sql = "SELECT * FROM `order_details` WHERE `order_id`=?";
+                    connection.query(order_sql, [offer_result.order_id], function(err, order_result) {
+                        if (err) {
+                            callback();
+                        } else {
+                            for (var j = 0; j < user_details.length; j++) {
+                                user_details[j].password = "";
+                                if ( user_details[j].profile_url != '' ) {
+                                    user_details[j].profile_url = 'user/'+user_details[j].profile_url;
+                                }
+                                user_details[j].user_rating = [{"rating_count": user_rating_result.length}];
+                                user_details[j].offer_details = offer_result;
+                                user_details[j].order_details = order_result[0];
+                            }
+                           
+                            arr.push(user_details[0]);
+                            callback();
                         }
                     });
                 }
@@ -1651,94 +1803,101 @@ exports.accept_reject_offer = function(req, res) {
                                             responses.sendError(res);
                                             return;
                                         } else {
+                                        	var delete_notification_sql = "DELETE FROM `notification` WHERE `notification_type_id`=? AND `notification_type`=? AND `notification_type`=?"; 
+		                                    connection.query(offer_user_detail_sql, [order_id,1,2], function(err, deleteResult) {
+		                                        if ( err ) {
+		                                            responses.sendError(res);
+		                                            return;
+		                                        } else {
 
-                                            var notification_unique_id = utils.generateRandomString();
-                                            var notification_id = md5(notification_unique_id);
-                                            var message_unique_iddd = utils.generateRandomString();
-                                            var notification_message_id = md5(message_unique_iddd);
+		                                            var notification_unique_id = utils.generateRandomString();
+		                                            var notification_id = md5(notification_unique_id);
+		                                            var message_unique_iddd = utils.generateRandomString();
+		                                            var notification_message_id = md5(message_unique_iddd);
 
-                                            var currentTime = new Date();
-                                            var created_on = Math.round(currentTime.getTime() / 1000);
-                                            
-                                            var notification_type = "3";
-                                            var notification_text = "Your order has started! We wish you the best experience";
+		                                            var currentTime = new Date();
+		                                            var created_on = Math.round(currentTime.getTime() / 1000);
+		                                            
+		                                            var notification_type = "3";
+		                                            var notification_text = "Your order has started! We wish you the best experience";
 
-                                            var sql = "INSERT INTO `notification`(`notification_id`,`sender_id`, `receiver_id`, `notification_type`, `notification_text`, `notification_type_id`, `created_on`) VALUES (?,?,?,?,?,?,?)";
-                                            var value = [notification_id, user_id, offer_created_by_id, notification_type, notification_text , order_id, created_on];
-                                            connection.query(sql, value, function (err, result) {
-                                                console.log(err);
-                                                if (err) {
-                                                    responses.sendError(res);
-                                                    return;
-                                                } else {
-                                                    var serverKey = config.get('serverFCMKey'); //put your server key here 
-                                                    console.log(offerUserResult[0].device_token);
-                                                    var fcm = new FCM(serverKey);
+		                                            var sql = "INSERT INTO `notification`(`notification_id`,`sender_id`, `receiver_id`, `notification_type`, `notification_text`, `notification_type_id`, `created_on`) VALUES (?,?,?,?,?,?,?)";
+		                                            var value = [notification_id, user_id, offer_created_by_id, notification_type, notification_text , order_id, created_on];
+		                                            connection.query(sql, value, function (err, result) {
+		                                                console.log(err);
+		                                                if (err) {
+		                                                    responses.sendError(res);
+		                                                    return;
+		                                                } else {
+		                                                    var serverKey = config.get('serverFCMKey'); //put your server key here 
+		                                                    console.log(offerUserResult[0].device_token);
+		                                                    var fcm = new FCM(serverKey);
 
-                                                    if ( offerUserResult[0].device_type == 1 ) {
-                                                    	var message = { //this may vary according to the message type (single recipient, multicast, topic, et cetera) 
-                                                            to: offerUserResult[0].device_token, 
-                                                            collapse_key: 'otlbni',
-                                                            notification: {
-													        	"title" : "OTLBNI",
-													            "body" : notification_text,
-															    "aps" : {
-															        "alert" : {
-															            "data" : {
-													                        "notification_type": notification_type,
-			                                                                "notification_type_id": order_id,
-			                                                                "access_token": access_token,
-			                                                                "sender_id": user_id,
-                                                                            "notification_id": notification_id
-													                    }
-															        },
-															        "badge" : 5
-															    }
-															}
-                                                        };
-                                                    } else {
-	                                                    var message = { //this may vary according to the message type (single recipient, multicast, topic, et cetera) 
-	                                                        to: offerUserResult[0].device_token, 
-	                                                        collapse_key: 'otlbni',
-	                                                        notification: {
-	                                                            title: 'OTLBNI', 
-	                                                            body: notification_text 
-	                                                        },
-	                                                        data: {
-	                                                            notification_type: notification_type,
-	                                                            notification_type_id: order_id,
-	                                                            access_token: access_token,
-	                                                            sender_id: user_id,
-                                                                notification_id: notification_id
-	                                                        }
-	                                                    };
-	                                                }
-                                                    
-                                                    fcm.send(message, function(err, response){
-                                                        if (err) {
-                                                            // return callback(0);
-                                                            console.log(err);
-                                                        } else {
-                                                            // return callback(1);
-                                                            console.log("jhj"+response);
-                                                        }
-                                                    });
+		                                                    if ( offerUserResult[0].device_type == 1 ) {
+		                                                    	var message = { //this may vary according to the message type (single recipient, multicast, topic, et cetera) 
+		                                                            to: offerUserResult[0].device_token, 
+		                                                            collapse_key: 'otlbni',
+		                                                            notification: {
+															        	"title" : "OTLBNI",
+															            "body" : notification_text,
+																	    "aps" : {
+																	        "alert" : {
+																	            "data" : {
+															                        "notification_type": notification_type,
+					                                                                "notification_type_id": order_id,
+					                                                                "access_token": access_token,
+					                                                                "sender_id": user_id,
+		                                                                            "notification_id": notification_id
+															                    }
+																	        },
+																	        "badge" : 5
+																	    }
+																	}
+		                                                        };
+		                                                    } else {
+			                                                    var message = { //this may vary according to the message type (single recipient, multicast, topic, et cetera) 
+			                                                        to: offerUserResult[0].device_token, 
+			                                                        collapse_key: 'otlbni',
+			                                                        notification: {
+			                                                            title: 'OTLBNI', 
+			                                                            body: notification_text 
+			                                                        },
+			                                                        data: {
+			                                                            notification_type: notification_type,
+			                                                            notification_type_id: order_id,
+			                                                            access_token: access_token,
+			                                                            sender_id: user_id,
+		                                                                notification_id: notification_id
+			                                                        }
+			                                                    };
+			                                                }
+		                                                    
+		                                                    fcm.send(message, function(err, response){
+		                                                        if (err) {
+		                                                            // return callback(0);
+		                                                            console.log(err);
+		                                                        } else {
+		                                                            // return callback(1);
+		                                                            console.log("jhj"+response);
+		                                                        }
+		                                                    });
 
-                                                    user_message.send_bulk_message(user_id, offer_created_by_id, order_id, delivery_amount, delivery_time, delivery_distance);
+		                                                    user_message.send_bulk_message(user_id, offer_created_by_id, order_id, delivery_amount, delivery_time, delivery_distance);
 
-                                                    var response = {
-                                                        flag: 1,
-                                                        response: {
-                                                            "notification_type": "3",
-                                                            "notification_type_id": order_id,
-                                                            "sender_id": offer_created_by_id
-                                                        },
-                                                        message: "Offer accepted successfully."
-                                                    };
-                                                    res.status(constants.responseFlags.ACTION_COMPLETE).json(response);
-                                                }
+		                                                    var response = {
+		                                                        flag: 1,
+		                                                        response: {
+		                                                            "notification_type": "3",
+		                                                            "notification_type_id": order_id,
+		                                                            "sender_id": offer_created_by_id
+		                                                        },
+		                                                        message: "Offer accepted successfully."
+		                                                    };
+		                                                    res.status(constants.responseFlags.ACTION_COMPLETE).json(response);
+		                                                }
+		                                            });
+                                            	}
                                             });
-                                               
                                         }
                                     });
                                 }

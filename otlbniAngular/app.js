@@ -3,7 +3,7 @@
   |                     Creating Global application Module      |
   |------------------------------------------------------------------
  */
-var app = angular.module('otlbni', ['ngRoute']);
+var app = angular.module('otlbni', ['ngRoute', 'chart.js', 'ui.tinymce']);
 // alert('fdgdg');
 //Path to APIs used throught the application
 var base_url = "http://52.30.101.158:3002/#!";
@@ -32,6 +32,26 @@ app.config(["$routeProvider", function ($routeProvider) {
         templateUrl: "views/courierlist.html",
         controller: "courierlist"
     })
+    .when("/allOrder", {
+        templateUrl: "views/order.html",
+        controller: "order"
+    })
+    .when("/pendingOrder", {
+        templateUrl: "views/pending_order.html",
+        controller: "pending_order"
+    })
+    .when("/onTheWayOrder", {
+        templateUrl: "views/on_the_way_order.html",
+        controller: "on_the_way_order"
+    })
+    .when("/completedOrder", {
+        templateUrl: "views/completed_order.html",
+        controller: "completed_order"
+    })
+    .when("/cancelledOrder", {
+        templateUrl: "views/cancelled_order.html",
+        controller: "cancelled_order"
+    })
     .when("/ecommerce/brand", {
         templateUrl: "views/ecommerce/ecom_brand.html",
         controller: "ecom_brand"
@@ -47,6 +67,14 @@ app.config(["$routeProvider", function ($routeProvider) {
     .when("/ecommerce/subcategory/:id/:idd", {
         templateUrl: "views/ecommerce/sub_category.html",
         controller: "sub_category"
+    })
+    .when("/ecommerce/product", {
+        templateUrl: "views/ecommerce/ecom_product.html",
+        controller: "ecom_product"
+    })
+    .when("/ecommerce/add_product", {
+        templateUrl: "views/ecommerce/add_product.html",
+        controller: "add_product"
     })
     .when("/reset", {
         templateUrl: "views/reset.html",

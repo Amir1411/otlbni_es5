@@ -22,6 +22,43 @@
 		</div>
 	</div>
 
+	<div id="markedStoreModal" tabindex="-1" role="dialog" class="modal fade">
+		<div class="modal-dialog">
+			<div class="modal-content">
+				<div class="modal-header bg-primary">
+					<button type="button" class="close" data-dismiss="modal">
+						<span aria-hidden="true">×</span>
+						<span class="sr-only">Close</span>
+					</button>
+					<h4 class="modal-title">List of marked stores</h4>
+				</div>
+				<div class="modal-body">
+					<div class="card">
+						<div class="card-body">
+							<ul class="media-list">
+								<li class="media" ng-repeat="(key,list) in courierPlaceList">
+									<div class="media-middle media-left">
+										<a href="javascript:void(0)">
+											<img class="img-circle" width="48" height="48" ng-src="{{list.icon}}" alt="Maliha Elephant T-shirt">
+										</a>
+									</div>
+									<div class="media-middle media-body">
+										<h5 class="media-heading">
+											<a class="link-muted" href="javascript:void(0)"><b>{{list.name}}</b> - {{list.formatted_address}}</a>
+										</h5>
+									</div>
+								</li>
+							</ul>
+						</div>
+					</div>
+				</div>
+				<div class="modal-footer">
+					<button class="btn btn-primary" data-dismiss="modal" type="button">Close</button>
+				</div>
+			</div>
+		</div>
+	</div>
+
 	<div class="layout-content">
 		<div class="layout-content-body">
 			<div class="title-bar">
@@ -30,39 +67,62 @@
 				</h1>
 			</div>
 			<div class="row gutter-xs">
-				<div class="col-xs-12">
+				<div class="col-md-12">
 					<div class="card">
-						<div class="card-body">
-							<table id="demo-datatables-5" class="table table-responsive table-striped table-nowrap" cellspacing="0" width="100%" role="grid" style="width: 100%;">
-								<thead>
-									<tr>
-										<th class="text-center">ID</th>
-										<th class="text-center">Name</th>
-										<th class="text-center">Profile pic</th>
-										<th class="text-center">Email</th>
-										<th class="text-center">Action</th>
-									</tr>
-								</thead>
-								<tbody>
-									<tr ng-repeat="(key,list) in userlist">
-										<td class="text-center">{{list.number}}</td>
-										<td class="text-center">{{list.user_name}}</td>
-										<td class="text-center">
-											<!-- <img class="" ng-src="{{list.profile_url}}" alt="State Flag" width="60px" height="60px"> -->
-											<div class="" style="background: url({{list.profile_url}});height: 30px;background-size: cover;background-position: center;background-repeat: no-repeat;width: 30px;margin: auto;">
-										</td>
-										<td class="text-center">{{list.user_email}}</td>
-										<td class="text-center">
-											<button class="btn btn-primary btn-sm" type="button" ng-hide="list.is_blocked" ng-click="blockunblockuser_popup(1,list.user_id, key)">
-												Block
-											</button>
-											<button class="btn btn-success btn-sm" type="button" ng-show="list.is_blocked" ng-click="blockunblockuser_popup(0,list.user_id, key)">
-												Un-Block
-											</button>
-										</td>
-									</tr>
-								</tbody>
-							</table>
+						<div class="card-body userTableOverflow" data-toggle="match-height">
+							<div class="table-responsive">
+								<table id="demo-datatables-5" class="table table-responsive table-striped table-wrap" role="grid">
+									<thead>
+										<tr>
+											<th class="text-center">ID</th>
+											<th class="text-left">User Details</th>
+											<th class="text-center">Profile pic</th>
+											<th class="text-center">Verification Code</th>
+											<th class="text-center">Device Token</th>
+											<th class="text-center">Total order/offer created</th>
+											<th class="text-center">Total paid</th>
+											<th class="text-center">Total revenue</th>
+											<th class="text-center">Account Balance</th>
+											<th class="text-center">Average Rating</th>
+											<th class="text-center">Action</th>
+										</tr>
+									</thead>
+									<tbody>
+										<tr ng-repeat="(key,list) in userlist">
+											<td class="text-center">{{list.number}}</td>
+											<td class="text-left">
+												<b>Name</b> -{{list.user_name}} <br>
+				                                <b>Email</b> - {{list.user_email}}<br>
+				                                <b>Contact</b> - {{list.mobile_number}}
+											</td>
+											<td class="text-center">
+												<img ng-src="{{list.profile_url}}" width="40px" height="40px">
+											</td>
+											<td class="text-center">{{list.verification_code}}</td>
+											<td class="text-center" style="width: 20%;">{{list.device_token}}</td>
+											<td class="text-center">
+												<b>Order</b> - {{list.total_order_created_count}}<br>
+												<b>Offer</b> - {{list.total_offer_created_count}}
+											</td>
+											<td class="text-center">{{list.total_paid}}</td>
+											<td class="text-center">{{list.total_revenue}}</td>
+											<td class="text-center">{{list.account_balance}}</td>
+											<td class="text-center">{{list.average_rating}}</td>
+											<td class="text-center">
+												<button class="btn btn-primary btn-sm" type="button" ng-hide="list.is_blocked" ng-click="blockunblockuser_popup(1,list.user_id, key)">
+													Block
+												</button>
+												<button class="btn btn-success btn-sm" type="button" ng-show="list.is_blocked" ng-click="blockunblockuser_popup(0,list.user_id, key)">
+													Unblock
+												</button>
+												<button class="btn btn-default btn-sm" data-toggle="modal" data-target="#markedStoreModal" type="button" ng-click="getCourierDetails(list.user_id, key)">
+													Marked List
+												</button>
+											</td>
+										</tr>
+									</tbody>
+								</table>
+							</div>
 						</div>
 					</div>
 				</div>
