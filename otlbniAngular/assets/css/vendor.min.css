@@ -250,3 +250,9 @@ table.dataTable thead .sorting:before, table.dataTable thead .sorting_asc:before
 .dashboardPage .card-wrap {
     padding: 27px 10px 20px;
 }
+.btn-navbar {
+	padding: 15px 10px;
+	background: #008cff;
+    border: 0;
+    color: #fff;
+}

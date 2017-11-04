@@ -1,5 +1,49 @@
 <div ng-controller="header">
 
+	<div id="sendNotificationPopup" tabindex="-1" role="dialog" class="modal in">
+		<div class="backgroundOverlay"></div>
+		<div class="modal-dialog modal-md">
+			<div class="modal-content">
+				<div class="modal-header bg-success">
+					<h4 class="modal-title">Send Notification</h4>
+				</div>
+				<div class="modal-body">
+					<form>
+						<div class="form-group success-container" ng-show="error_msg">
+							<div class="alert alert-danger alert-dismissable fade in">							
+								<a href="#" class="close" data-dismiss="alert" aria-label="close">×</a>							
+								<strong>Error! </strong><span class="errorContainer">{{error_msg_text}}</span>						
+							</div>
+						</div>
+						<div class="form-group success-container" ng-show="success_msg">
+							<div class="alert alert-success alert-dismissable fade in">							
+								<a href="#" class="close" data-dismiss="alert" aria-label="close">×</a>							
+								<strong>Success! </strong><span class="errorContainer">{{success_msg_text}}</span>						
+							</div>
+						</div>
+						<div class="form-group">
+							<select required="required" class="form-control" ng-model="push_select">
+								<option value="" selected="selected">-- Select User--</option>
+								<option value="1" label="">iOS User</option>
+								<option value="2" label="">Android User</option>
+								<option value="3" label="">Both</option>
+							</select>
+							<span class="error" ng-show="push_select_error">*{{push_select_error_msg}}</span>
+						</div>
+						<div class="form-group">
+							<textarea class="form-control" rows="4" placeholder="Enter Message" ng-model="push_msg"></textarea>
+							<span class="error" ng-show="push_msg_error">*{{push_msg_error_msg}}</span>
+						</div>
+						<div class="text-center">
+							<button class="btn btn-success" type="button" ng-click="sendNotification()">Submit</button>
+							<button class="btn btn-default" data-dismiss="modal" type="button">Cancel</button>
+						</div>
+					</form>
+				</div>
+			</div>
+		</div>
+	</div>
+
 	<div id="logoutPopup" tabindex="-1" role="dialog" class="modal in">
 		<div class="backgroundOverlay"></div>
 		<div class="modal-dialog">
@@ -64,6 +108,11 @@
 						</span>
 					</button>
 					<ul class="nav navbar-nav navbar-right">
+						<li class="dropdown hidden-xs">
+							<button  class="btn btn-navbar" data-toggle="modal" data-target="#sendNotificationPopup">
+								<i class="fa fa-bell-o text-info" style="color: #fff;margin-right: 3px;"></i>  Send Notification
+							</button>
+						</li>
 						<li class="dropdown hidden-xs">
 							<button class="navbar-account-btn" data-toggle="dropdown" aria-haspopup="true">
 								<img class="rounded" width="36" height="36" ng-src="{{userDetails.profile_url}}" alt="userDetails.name"> {{userDetails.name}}

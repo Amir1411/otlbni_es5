@@ -246,6 +246,7 @@ app.post('/getAdminOrder', admin_panel.getAdminOrder);
 app.post('/getAllAdminOrder', admin_panel.getAllAdminOrder);
 app.post('/dashboard_report', admin_panel.dashboard_report);
 app.post('/get_total_user_graph_data', admin_panel.get_total_user_graph_data);
+app.post('/send_push_notification_to_user', admin_panel.send_push_notification_to_user);
 
 // ....................... Ecommerce Admin Panel API ..........................
 

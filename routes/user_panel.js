@@ -1051,17 +1051,15 @@ exports.delivered = function(req, res) {
 								                                                };
 								                                            } else {
 										                                        var message = { //this may vary according to the message type (single recipient, multicast, topic, et cetera) 
-										                                            to: userResult[0].device_token, 
-										                                            collapse_key: 'otlbni',
-										                                            notification: {
-										                                                title: 'OTLBNI', 
-										                                                body:  notification_text
-										                                            },
-										                                            data: {
-										                                                notification_type: notification_type,
-										                                                notification_type_id: order_id,
-										                                                access_token: access_token,
-                                                                        				notification_id: notification_id
+										                                            "to": userResult[0].device_token, 
+										                                            "collapse_key": 'otlbni',
+										                                            "data": {
+										                                                "notification_type": notification_type,
+										                                                "notification_type_id": order_id,
+										                                                "access_token": access_token,
+                                                                        				"notification_id": notification_id,
+                                                                        				"title": 'OTLBNI', 
+										                                                "body":  notification_text
 										                                            }
 										                                        };
 										                                    }

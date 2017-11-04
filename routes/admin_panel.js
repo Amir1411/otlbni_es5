@@ -15,6 +15,7 @@ var path = require('path');
 var multer = require('multer');
 var EmailModule = require('./EmailModule');
 var async = require('async');
+var FCM = require('fcm-node');
 
 exports.logout = function(req, res) {
 	var access_token = req.body.access_token;
@@ -1148,4 +1149,235 @@ exports.get_total_user_graph_data = function(req,res){
 			}
 		});
 	}
+}
+
+exports.send_push_notification_to_user = function(req, res) {
+	var access_token = req.body.access_token;
+	var push_user = req.body.push_user;
+	var push_msg = req.body.push_msg;
+
+	var manvalues = [access_token, push_msg];
+	var checkblank = commonFunc.checkBlank(manvalues);
+	if (checkblank == 1) {
+		responses.parameterMissingResponse(res);
+		return;
+	} else {
+		utils.authenticateAdminAccessToken(access_token, function (result) {
+			if (result == 0) {
+				responses.sendError(res);
+				return;
+			} else {
+				if ( push_user == 1 ) {
+					// Ios push notification
+					var sql = "SELECT * FROM `user` WHERE `device_type`=?";
+					connection.query(sql, [1], function(err, userResult){
+						if ( err ) {
+							responses.sendError(res);
+							return;
+						} else {
+							if ( userResult.length > 0 ) {
+								for (var i = 0; i < userResult.length; i++) {
+									userResult[i]["password"] = "";
+									userResult[i]["push_msg"] = push_msg;
+								}
+								async.eachSeries(userResult, send_notification_to_ios_user, function (err, results) {
+	                                var response = {
+	                                	status: constants.responseFlags.ACTION_COMPLETE,
+	                                    flag: 1,
+	                                    response: "Notification sent successfully.",
+	                                    message: "Notification sent successfully."
+	                                };
+	                                res.json(response);
+	                                return;
+	                            });
+							} else {
+								var response = {
+                                	status: constants.responseFlags.SHOW_ERROR_MESSAGE,
+                                    flag: 1,
+                                    response: "No user found to send notification.",
+                                    message: "No user found to send notification."
+                                };
+                                res.json(response);
+                                return;
+							}
+						}
+					});
+				} else if ( push_user == 2 ) {
+					// Android push notification
+					var sql = "SELECT * FROM `user` WHERE `device_type`=?";
+					connection.query(sql, [2], function(err, userResult){
+						if ( err ) {
+							responses.sendError(res);
+							return;
+						} else {
+							if ( userResult.length > 0 ) {
+								for (var i = 0; i < userResult.length; i++) {
+									userResult[i]["password"] = "";
+									userResult[i]["push_msg"] = push_msg;
+								}
+								async.eachSeries(userResult, send_notification_to_android_user, function (err, results) {
+	                                var response = {
+	                                	status: constants.responseFlags.ACTION_COMPLETE,
+	                                    flag: 1,
+	                                    response: "Notification sent successfully.",
+	                                    message: "Notification sent successfully."
+	                                };
+	                                res.json(response);
+	                                return;
+	                            });
+                            } else {
+								var response = {
+                                	status: constants.responseFlags.SHOW_ERROR_MESSAGE,
+                                    flag: 1,
+                                    response: "No user found to send notification.",
+                                    message: "No user found to send notification."
+                                };
+                                res.json(response);
+                                return;
+							}
+						}
+					});
+				} else {
+					// Both push notification
+					var sql = "SELECT * FROM `user`";
+					connection.query(sql, [], function(err, userResult){
+						if ( err ) {
+							responses.sendError(res);
+							return;
+						} else {
+							if ( userResult.length > 0 ) {
+								for (var i = 0; i < userResult.length; i++) {
+									userResult[i]["password"] = "";
+									userResult[i]["push_msg"] = push_msg;
+								}
+								async.eachSeries(userResult, send_notification_to_user, function (err, results) {
+	                                var response = {
+	                                	status: constants.responseFlags.ACTION_COMPLETE,
+	                                    flag: 1,
+	                                    response: "Notification sent successfully.",
+	                                    message: "Notification sent successfully."
+	                                };
+	                                res.json(response);
+	                                return;
+	                            });
+
+                            } else {
+								var response = {
+                                	status: constants.responseFlags.SHOW_ERROR_MESSAGE,
+                                    flag: 1,
+                                    response: "No user found to send notification.",
+                                    message: "No user found to send notification."
+                                };
+                                res.json(response);
+                                return;
+							}
+						}
+					});
+				}
+			}
+		});
+	}
+}
+
+function send_notification_to_user(userResult, callback) {
+	if ( userResult.device_token != "" ) {
+        var serverKey = config.get('serverFCMKey');
+        var fcm = new FCM(serverKey);
+
+        if ( userResult.device_type == 1 ) {
+            var message = { 
+                to: userResult.device_token, 
+                collapse_key: 'otlbni',
+                notification: {
+                	"title" : "OTLBNI",
+                    "body" : userResult.push_msg
+                }
+            };
+            fcm.send(message, function(err, response){
+                if (err) {
+                	console.log(err);
+                    callback();
+                } else {
+                	console.log(response);
+                    callback();
+                }
+            });
+        } else if (userResult.device_type == 2) {
+            var message = {
+                to: userResult.device_token, 
+                collapse_key: 'otlbni',
+                notification: {
+                    title: 'OTLBNI', 
+                    body:  userResult.push_msg
+                }
+            };
+            fcm.send(message, function(err, response){
+                if (err) {
+                	console.log(err);
+                    callback();
+                } else {
+                	console.log(response);
+                    callback();
+                }
+            });
+        } else {
+        	callback();
+        }
+    } else {
+        callback();
+    }
+}
+
+function send_notification_to_ios_user(userResult, callback) {
+	if ( userResult.device_token != "" ) {
+        var serverKey = config.get('serverFCMKey');
+        var fcm = new FCM(serverKey);
+
+        var message = { 
+            to: userResult.device_token, 
+            collapse_key: 'otlbni',
+            notification: {
+            	"title" : "OTLBNI",
+                "body" : userResult.push_msg
+            }
+        };
+        fcm.send(message, function(err, response){
+            if (err) {
+            	console.log(err);
+                callback();
+            } else {
+            	console.log(response);
+                callback();
+            }
+        });
+    } else {
+        callback();
+    }
+}
+
+function send_notification_to_android_user(userResult, callback) {
+	if ( userResult.device_token != "" ) {
+        var serverKey = config.get('serverFCMKey');
+        var fcm = new FCM(serverKey);
+
+        var message = {
+            to: userResult.device_token, 
+            collapse_key: 'otlbni',
+            notification: {
+                title: 'OTLBNI', 
+                body:  userResult.push_msg
+            }
+        };
+        fcm.send(message, function(err, response){
+            if (err) {
+            	console.log(err);
+                callback();
+            } else {
+            	console.log(response);
+                callback();
+            }
+        });
+    } else {
+        callback();
+    }
 }

@@ -921,12 +921,8 @@ function create_order (access_token,order_id, order_number, user_id, place_id, p
 
 function create_order_notification (userResult, callback) {
     console.log(userResult);
-    // var device_token_dummy =  userResult[i].device_token; 
-    console.log("x"+userResult.device_type);
-    console.log("y"+userResult.user_id);
-    console.log("z"+userResult.order_user_id);
     if (userResult.user_id != userResult.order_user_id ) {
-        //  For calculate distance
+        
         var radlat1 = Math.PI * parseInt(userResult.order_lattitude)/180;
         var radlat2 = Math.PI * parseInt(userResult.lattitude)/180;
         var theta = parseInt(userResult.order_longitude)-parseInt(userResult.longitude);
@@ -935,9 +931,8 @@ function create_order_notification (userResult, callback) {
         dist = Math.acos(dist);
         dist = dist * 180/Math.PI;
         dist = dist * 60 * 1.1515;
-        // in KM
+
         dist = dist * 1.609344;
-        console.log("x"+userResult.device_type);
         if (dist < 20) {
             if ( userResult.account_balance == '' ) {
                 var acc = 0;
@@ -971,7 +966,7 @@ function create_order_notification (userResult, callback) {
                                         to: userResult.device_token, 
                                         collapse_key: 'otlbni',
                                         notification: {
-                                         "title" : "OTLBNI",
+                                            "title" : "OTLBNI",
                                             "body" : notification_text,
                                             "aps" : {
                                                 "alert" : {
@@ -999,18 +994,16 @@ function create_order_notification (userResult, callback) {
                                     });
                                 } else if (userResult.device_type == 2) {
                                     var message = { //this may vary according to the message type (single recipient, multicast, topic, et cetera) 
-                                        to: userResult.device_token, 
-                                        collapse_key: 'otlbni',
-                                        notification: {
-                                            title: 'OTLBNI', 
-                                            body:  notification_text
-                                        },
-                                        data: {
-                                            notification_type: notification_type,
-                                            notification_type_id: userResult.order_id,
-                                            access_token: userResult.order_access_token,
-                                            sender_id: userResult.order_user_id,
-                                            notification_id: notification_id
+                                        "to": userResult.device_token, 
+                                        "collapse_key": 'otlbni',
+                                        "data": {
+                                            "notification_type": notification_type,
+                                            "notification_type_id": userResult.order_id,
+                                            "access_token": userResult.order_access_token,
+                                            "sender_id": userResult.order_user_id,
+                                            "notification_id": notification_id,
+                                            "title": 'OTLBNI', 
+                                            "body":  notification_text
                                         }
                                     };
                                     console.log(message);
@@ -1025,12 +1018,22 @@ function create_order_notification (userResult, callback) {
                                     });
                                 }
                                 
+                            } else {
+                                callback();
                             }
                         }
                     });
+                } else {
+                    callback();
                 }
-            }
-        } 
+            } else {
+                callback();
+            } 
+        } else {
+            callback();
+        }
+    } else {
+        callback();
     }
 }
 
@@ -1644,18 +1647,16 @@ exports.create_offer = function(req, res) {
 	                                                        };
                                                         } else {
 	                                                        var message = { //this may vary according to the message type (single recipient, multicast, topic, et cetera) 
-	                                                            to: userResult[0].device_token, 
-	                                                            collapse_key: 'otlbni',
-	                                                            notification: {
-	                                                                title: 'OTLBNI', 
-	                                                                body: notification_text 
-	                                                            },
-	                                                            data: {
-	                                                                notification_type: notification_type,
-	                                                                notification_type_id: order_id,
-	                                                                access_token: access_token,
-	                                                                sender_id: offer_created_by_id,
-                                                                    notification_id: notification_id
+	                                                            "to": userResult[0].device_token, 
+	                                                            "collapse_key": 'otlbni',
+	                                                            "data": {
+	                                                                "notification_type": notification_type,
+	                                                                "notification_type_id": order_id,
+	                                                                "access_token": access_token,
+	                                                                "sender_id": offer_created_by_id,
+                                                                    "notification_id": notification_id,
+                                                                    "title": 'OTLBNI', 
+                                                                    "body": notification_text 
 	                                                            }
 	                                                        };
 	                                                    }
@@ -1792,7 +1793,7 @@ exports.accept_reject_offer = function(req, res) {
                         if ( accept_reject_offer_status == "1" ) {  
                             var sql = "UPDATE `order_details` SET `status`='"+accept_reject_offer_status+"', `order_by_id`='"+offer_created_by_id+"' WHERE `order_id`=?";
                             connection.query(sql, [order_id], function(err, result) {
-                                console.log(err);
+                                // console.log(err);
                                 if (err) {
                                     responses.sendError(res);
                                     return;
@@ -1803,8 +1804,11 @@ exports.accept_reject_offer = function(req, res) {
                                             responses.sendError(res);
                                             return;
                                         } else {
-                                        	var delete_notification_sql = "DELETE FROM `notification` WHERE `notification_type_id`=? AND `notification_type`=? AND `notification_type`=?"; 
-		                                    connection.query(offer_user_detail_sql, [order_id,1,2], function(err, deleteResult) {
+                                        	var delete_notification_sql = "DELETE FROM `notification` WHERE `notification_type_id`=? AND `notification_type`=? OR `notification_type`=?"; 
+		                                    connection.query(delete_notification_sql, [order_id,1,2], function(err, deleteResult) {
+                                                console.log("==================");
+                                                console.log("error"+err);
+                                                console.log("==================");
 		                                        if ( err ) {
 		                                            responses.sendError(res);
 		                                            return;
@@ -1856,18 +1860,16 @@ exports.accept_reject_offer = function(req, res) {
 		                                                        };
 		                                                    } else {
 			                                                    var message = { //this may vary according to the message type (single recipient, multicast, topic, et cetera) 
-			                                                        to: offerUserResult[0].device_token, 
-			                                                        collapse_key: 'otlbni',
-			                                                        notification: {
-			                                                            title: 'OTLBNI', 
-			                                                            body: notification_text 
-			                                                        },
-			                                                        data: {
-			                                                            notification_type: notification_type,
-			                                                            notification_type_id: order_id,
-			                                                            access_token: access_token,
-			                                                            sender_id: user_id,
-		                                                                notification_id: notification_id
+			                                                        "to": offerUserResult[0].device_token, 
+			                                                        "collapse_key": 'otlbni',
+			                                                        "data": {
+			                                                            "notification_type": notification_type,
+			                                                            "notification_type_id": order_id,
+			                                                            "access_token": access_token,
+			                                                            "sender_id": user_id,
+		                                                                "notification_id": notification_id,
+                                                                        "title": 'OTLBNI', 
+                                                                        "body": notification_text 
 			                                                        }
 			                                                    };
 			                                                }
@@ -1954,17 +1956,15 @@ exports.accept_reject_offer = function(req, res) {
                                             } else {
 
 	                                            var message = { //this may vary according to the message type (single recipient, multicast, topic, et cetera) 
-	                                                to: offerUserResult[0].device_token, 
-	                                                collapse_key: 'otlbni',
-	                                                notification: {
-	                                                    title: 'OTLBNI', 
-	                                                    body: notification_text 
-	                                                },
-	                                                data: {
-	                                                    notification_type: notification_type,
-	                                                    notification_type_id: order_id,
-	                                                    access_token: access_token,
-                                                        notification_id: notification_id
+	                                                "to": offerUserResult[0].device_token, 
+	                                                "collapse_key": 'otlbni',
+	                                                "data": {
+	                                                    "notification_type": notification_type,
+	                                                    "notification_type_id": order_id,
+	                                                    "access_token": access_token,
+                                                        "notification_id": notification_id,
+                                                        "title": 'OTLBNI', 
+                                                        "body": notification_text 
 	                                                }
 	                                            };
 	                                        }

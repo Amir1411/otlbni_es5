@@ -85,6 +85,7 @@ exports.send_message = function(req, res) {
                 return;
             } else {
                 var sender_id = result[0].user_id;
+                var sender_name = result[0].user_name;
                 var receiver_id = message_to_id;
 
                 var message_unique_idd = utils.generateRandomString();
@@ -104,12 +105,68 @@ exports.send_message = function(req, res) {
                         responses.sendError(res);
                         return;
                     } else {
-                        var response = {
-                            flag: 1,
-                            response: {},
-                            message: "Successfully send message."
-                        }
-                        res.status(constants.responseFlags.ACTION_COMPLETE).json(response);
+
+                        var sql = "SELECT * FROM `user` WHERE `user_id`=?";
+                        connection.query(sql, [receiver_id], function (err, userResult) {
+                            if (err) {
+                                responses.sendError(res);
+                                return;
+                            } else {
+                                var FCM = require('fcm-node');
+                                var serverKey = config.get('serverFCMKey'); //put your server key here 
+                                var fcm = new FCM(serverKey);
+                                var notification_text = sender_name+" sent you a message";
+
+                                if ( userResult[0].device_type == 1 ) {
+                                    var message = { //this may vary according to the message type (single recipient, multicast, topic, et cetera) 
+                                        to: userResult[0].device_token, 
+                                        collapse_key: 'otlbni',
+                                        notification: {
+                                            "title" : "OTLBNI",
+                                            "body" : notification_text,
+                                            "aps" : {
+                                                "alert" : {
+                                                    "data" : {
+                                                        "notification_type": 3,
+                                                        "notification_type_id": message_unique_id,
+                                                        "access_token": access_token
+                                                    }
+                                                },
+                                                "badge" : 5
+                                            }
+                                        }
+                                    };
+                                } else {
+                                    var message = { //this may vary according to the message type (single recipient, multicast, topic, et cetera) 
+                                        "to": userResult[0].device_token, 
+                                        "collapse_key": 'otlbni',
+                                        "data": {
+                                            "notification_type": 3,
+                                            "notification_type_id": message_unique_id,
+                                            "access_token": access_token,
+                                            "title": 'OTLBNI', 
+                                            "body":  notification_text
+                                        }
+                                    };
+                                }
+                                
+                                fcm.send(message, function(err, response){
+                                    if (err) {
+                                        // return callback(0);
+                                        console.log(err);
+                                    } else {
+                                        // return callback(1);
+                                        console.log("jhj"+response);
+                                    }
+                                });
+                                var response = {
+                                    flag: 1,
+                                    response: {},
+                                    message: "Successfully send message."
+                                }
+                                res.status(constants.responseFlags.ACTION_COMPLETE).json(response);
+                            }
+                        });
                     }
                 });
             }
