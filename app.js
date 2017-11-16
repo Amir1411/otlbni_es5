@@ -198,6 +198,7 @@ app.post('/create_bill', user_panel.create_bill);
 app.post('/get_other_user_details', user_panel.get_other_user_details);
 app.post('/update_location', user_panel.update_location);
 app.post('/notification_on_off', user_panel.notification_on_off);
+app.post('/change_mobile_number', user_panel.change_mobile_number);
 
 //.......................PLACES PANEL API's.............................
 

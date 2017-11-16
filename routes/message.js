@@ -129,7 +129,8 @@ exports.send_message = function(req, res) {
                                                     "data" : {
                                                         "notification_type": 3,
                                                         "notification_type_id": message_unique_id,
-                                                        "access_token": access_token
+                                                        "access_token": access_token,
+                                                        "sender_id": sender_id
                                                     }
                                                 },
                                                 "badge" : 5
@@ -144,6 +145,7 @@ exports.send_message = function(req, res) {
                                             "notification_type": 3,
                                             "notification_type_id": message_unique_id,
                                             "access_token": access_token,
+                                            "sender_id": sender_id,
                                             "title": 'OTLBNI', 
                                             "body":  notification_text
                                         }

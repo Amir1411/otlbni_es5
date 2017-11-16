@@ -90,11 +90,11 @@ exports.insert_mobile_number = function(req, res) {
 	var longitude = req.body.longitude;
 	var device_token = req.body.device_token;
 	var device_type = req.body.device_type;
-	console.log(social_type);
+	console.log(req.body);
 
 	var sql = "SELECT * FROM `user` WHERE mobile_number=? LIMIT 1";
 	connection.query(sql, [mobile_number], function(err, response) {
-		// console.log(response.length);
+		console.log(response);
 		if (err) {
 			responses.sendError(res);
 			return;
@@ -127,6 +127,7 @@ exports.insert_mobile_number = function(req, res) {
 			var sql = "INSERT INTO `user`(`user_id`,`mobile_number`, `social_type`, `access_token`, `"+social_type_text+"`, `verification_code`, `device_type`, `device_token`, `lattitude`, `longitude`, `created_on`) VALUES (?,?,?,?,?,?,?,?,?,?,?)";
 			var value = [user_unique_id, mobile_number, social_type, access_token, social_id, otp, device_type, device_token, lattitude, longitude, created_on];
 			connection.query(sql, value, function (err, result) {
+				console.log(err);
 				if (err) {
 					responses.sendError(res);
 					return;
@@ -921,6 +922,72 @@ exports.report_user = function(req, res) {
                 });
 	        }
 	    });
+	}
+}
+
+exports.change_mobile_number = function(req, res) {
+	console.log(req.body.mobile_number);
+	var access_token = req.body.access_token;
+	var mobile_number = req.body.mobile_number;
+	
+	var manvalues = [access_token, mobile_number];
+	var checkblank = commonFunc.checkBlank(manvalues);
+	if (checkblank == 1) {
+		responses.parameterMissingResponse(res);
+		return;
+	} else {
+		utils.authenticateUser(access_token, function(result) {
+	        if (result == 0) {
+	             var response = {
+					flag: 1,
+					response: {},
+					message: "Invalid access token."	
+				};
+				res.status(constants.responseFlags.INVALID_ACCESS_TOKEN).json(response);
+				return;
+	        } else {
+	        	var user_id = result[0].user_id;
+				var sql = "SELECT * FROM `user` WHERE `mobile_number`=?";
+				connection.query(sql, [mobile_number], function(err, checkMobResult){
+					if (err) {
+						responses.sendError(res);
+						return;
+					} else if ( checkMobResult.length > 0 ) {
+						if ( user_id == checkMobResult[0].user_id ){
+							var message_response = "You cannot update an existing mobile number with yourself"
+							var response = {
+								flag: 1,
+								response: {},
+								message: message_response
+							};
+							res.status(constants.responseFlags.ALREADY_EXIST).json(response);
+						} else {
+							var message_response = "This mobile number already exist with us.";
+							var response = {
+								flag: 1,
+								response: {},
+								message: message_response
+							};
+							res.status(constants.responseFlags.ALREADY_EXIST).json(response);
+						}
+					} else {
+						var otp = utils.generateRandomString();
+
+		               	var update_otp = "UPDATE `user` SET `verification_code`=?, `mobile_number`=?, `is_verified`=? WHERE `access_token`=?";
+				       	connection.query(update_otp, [otp, mobile_number, 0, access_token], function(err, result){
+				       		messenger.sendOTP("Customer", mobile_number, otp);
+				       	});
+
+				    	var response = {
+							flag: 2,
+							response: {"access_token": access_token},
+							message: "OTP send successfully."
+						};
+						res.status(constants.responseFlags.ACTION_COMPLETE).json(response);
+					}
+				});
+			}
+		});
 	}
 }
 

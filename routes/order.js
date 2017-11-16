@@ -986,7 +986,7 @@ function create_order_notification (userResult, callback) {
                                     fcm.send(message, function(err, response){
                                         if (err) {
                                             callback();
-                                            // console.log(err);
+                                            console.log(err);
                                         } else {
                                             callback();
                                             console.log("jhj"+response);
@@ -1010,12 +1010,14 @@ function create_order_notification (userResult, callback) {
                                     fcm.send(message, function(err, response){
                                         if (err) {
                                             callback();
-                                            // console.log(err);
+                                            console.log(err);
                                         } else {
                                             callback();
                                             console.log("jhj"+response);
                                         }
                                     });
+                                } else {
+                                    callback();
                                 }
                                 
                             } else {
